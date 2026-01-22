@@ -19,10 +19,10 @@ import {
   Star
 } from 'lucide-react'
 
-// URLs Heartbeat
+// URLs
 const URLS = {
   free: 'https://www.community.highvaluecapital.club/invitation?code=E573F8#landing-page',
-  premium: 'https://www.community.highvaluecapital.club/invitation?code=567G8G&price=oneTime#checkout',
+  premium: 'https://buy.stripe.com/8x2eVddXt1RF0txbiu1Fe02',
   testimonials: 'https://n8n.srv1140766.hstgr.cloud/webhook/testimonials-page'
 }
 
