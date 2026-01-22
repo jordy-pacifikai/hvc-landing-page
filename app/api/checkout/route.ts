@@ -18,11 +18,11 @@ export async function POST() {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
+        'ui_mode': 'embedded',
         'mode': 'payment',
         'line_items[0][price]': 'price_1SsJFaDFDOh4UH0dk4ACImvm',
         'line_items[0][quantity]': '1',
-        'success_url': 'https://highvaluecapital.netlify.app/merci',
-        'cancel_url': 'https://highvaluecapital.netlify.app/',
+        'return_url': 'https://highvaluecapital.netlify.app/merci?session_id={CHECKOUT_SESSION_ID}',
         'allow_promotion_codes': 'true',
         'billing_address_collection': 'auto',
       }).toString(),
@@ -34,7 +34,7 @@ export async function POST() {
       throw new Error(session.error?.message || 'Failed to create checkout session')
     }
 
-    return NextResponse.json({ sessionId: session.id })
+    return NextResponse.json({ clientSecret: session.client_secret })
   } catch (error) {
     console.error('Checkout session error:', error)
     return NextResponse.json(
