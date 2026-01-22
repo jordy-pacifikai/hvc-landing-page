@@ -13,10 +13,21 @@ Page de vente High Value Capital - Formation Trading Forex
 
 ```bash
 npm install
+cp .env.example .env.local
+# Ajouter les cles Stripe dans .env.local
 npm run dev
 ```
 
 Ouvre [http://localhost:3000](http://localhost:3000)
+
+### Variables d'environnement
+
+Copier `.env.example` vers `.env.local` et remplir:
+
+- `STRIPE_SECRET_KEY`: Cle secrete Stripe (depuis dashboard Stripe)
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`: Cle publique Stripe
+
+**Important**: Ne jamais commiter `.env.local` (deja dans `.gitignore`)
 
 ## Deploiement Vercel
 
@@ -58,4 +69,16 @@ landing-page/
 ## URLs
 
 - Formation gratuite: `https://www.community.highvaluecapital.club/invitation?code=E573F8#landing-page`
-- Formation premium: `https://www.community.highvaluecapital.club/invitation?code=567G8G&price=oneTime#checkout`
+- Formation premium: `/checkout` (page custom avec Stripe Checkout)
+- Page merci: `/merci` (apres paiement Stripe)
+
+## Deploiement Netlify
+
+### Configuration Variables d'Environnement
+
+Dans Netlify Dashboard > Site settings > Environment variables:
+
+```
+STRIPE_SECRET_KEY=sk_live_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+```

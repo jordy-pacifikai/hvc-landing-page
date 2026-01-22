@@ -22,7 +22,7 @@ import {
 // URLs
 const URLS = {
   free: 'https://www.community.highvaluecapital.club/invitation?code=E573F8#landing-page',
-  premium: 'https://buy.stripe.com/8x2eVddXt1RF0txbiu1Fe02',
+  premium: '/checkout',
   testimonials: 'https://n8n.srv1140766.hstgr.cloud/webhook/testimonials-page'
 }
 
