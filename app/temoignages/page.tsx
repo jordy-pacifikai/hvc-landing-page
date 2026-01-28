@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -10,8 +10,7 @@ import {
   DollarSign,
   ArrowRight,
   CheckCircle,
-  Filter,
-  ExternalLink
+  Filter
 } from 'lucide-react'
 
 // Particules simplifiées
@@ -361,6 +360,22 @@ const filters = [
 export default function TestimonialsPage() {
   const [filter, setFilter] = useState<string>('all')
   const [showScreenshots, setShowScreenshots] = useState(true)
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null)
+
+  // Fermer lightbox avec ESC
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxImage(null)
+    }
+    if (lightboxImage) {
+      document.addEventListener('keydown', handleEsc)
+      document.body.style.overflow = 'hidden'
+    }
+    return () => {
+      document.removeEventListener('keydown', handleEsc)
+      document.body.style.overflow = 'auto'
+    }
+  }, [lightboxImage])
 
   const filteredTestimonials = filter === 'all'
     ? testimonials
@@ -490,21 +505,21 @@ export default function TestimonialsPage() {
               >
                 {/* Screenshot */}
                 {showScreenshots && testimonial.screenshot && (
-                  <div className="relative w-full h-48 md:h-56 bg-charcoal overflow-hidden">
+                  <div
+                    className="relative w-full h-48 md:h-56 bg-charcoal overflow-hidden cursor-pointer group"
+                    onClick={() => setLightboxImage(testimonial.screenshot)}
+                  >
                     <img
                       src={testimonial.screenshot}
                       alt={`Témoignage de ${testimonial.name}`}
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
                       loading="lazy"
                     />
-                    <a
-                      href={testimonial.screenshot}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="absolute top-3 right-3 p-2 bg-void/80 rounded-lg hover:bg-void transition-colors"
-                    >
-                      <ExternalLink className="w-4 h-4 text-champagne" />
-                    </a>
+                    <div className="absolute inset-0 bg-void/0 group-hover:bg-void/20 transition-colors flex items-center justify-center">
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity text-champagne text-sm font-medium">
+                        Cliquer pour agrandir
+                      </span>
+                    </div>
                   </div>
                 )}
 
@@ -617,6 +632,30 @@ export default function TestimonialsPage() {
           <p>© 2026 High Value Capital. Tous droits réservés.</p>
         </div>
       </footer>
+
+      {/* Lightbox Modal */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-[100] bg-void/95 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setLightboxImage(null)}
+        >
+          <div className="relative max-w-5xl max-h-[90vh] w-full">
+            <button
+              onClick={() => setLightboxImage(null)}
+              className="absolute -top-12 right-0 text-mist hover:text-champagne transition-colors text-sm flex items-center gap-2"
+            >
+              Fermer (ESC)
+              <span className="text-xl">&times;</span>
+            </button>
+            <img
+              src={lightboxImage}
+              alt="Screenshot en grand"
+              className="w-full h-full object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </main>
   )
 }
