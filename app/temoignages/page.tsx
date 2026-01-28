@@ -397,7 +397,7 @@ export default function TestimonialsPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-40 pb-12 px-6">
+      <section className="pt-32 pb-12 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-glass border border-champagne/20 rounded-full px-5 py-2.5 mb-8">
             <Star className="w-4 h-4 text-champagne" />
