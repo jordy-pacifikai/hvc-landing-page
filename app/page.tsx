@@ -27,7 +27,7 @@ import {
 const URLS = {
   free: '/gratuit',
   premium: '/checkout',
-  testimonials: 'https://n8n.srv1140766.hstgr.cloud/webhook/testimonials-page'
+  testimonials: '/temoignages'
 }
 
 // Hook pour détecter le scroll

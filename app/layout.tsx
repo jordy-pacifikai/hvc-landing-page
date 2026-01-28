@@ -3,14 +3,24 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'High Value Capital | Formation Trading Forex',
-  description: 'Rejoins une communaute de traders francophones qui passent leurs challenges propfirm et generent des payouts reels. 7+ Funded Traders, 20k$+ de payouts documentes.',
-  keywords: 'trading, forex, formation, propfirm, funded trader, ARD, ICT, SMC, liquidite',
+  description: 'Rejoins une communauté de traders francophones qui passent leurs challenges propfirm et génèrent des payouts réels. 7+ Funded Traders, 20k$+ de payouts documentés.',
+  keywords: 'trading, forex, formation, propfirm, funded trader, ARD, ICT, SMC, liquidité',
   authors: [{ name: 'Jordy Banks' }],
+  icons: {
+    icon: '/icon.png',
+    apple: '/apple-icon.png',
+  },
   openGraph: {
     title: 'High Value Capital | Formation Trading Forex',
-    description: 'Decouvre la methode qui a permis a 7+ membres de devenir Funded Traders.',
+    description: 'Découvre la méthode qui a permis à 7+ membres de devenir Funded Traders.',
     type: 'website',
     locale: 'fr_FR',
+    siteName: 'High Value Capital',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'High Value Capital | Formation Trading Forex',
+    description: 'Découvre la méthode qui a permis à 7+ membres de devenir Funded Traders.',
   },
 }
 
