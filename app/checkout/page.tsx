@@ -3,12 +3,55 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Loader2, ArrowLeft, CheckCircle } from 'lucide-react'
+import { Loader2, ArrowLeft, CheckCircle, Shield, Zap } from 'lucide-react'
 
 declare global {
   interface Window {
     Stripe?: any
   }
+}
+
+// Particules simplifiées
+function SimpleParticles() {
+  const particles = Array.from({ length: 15 }, (_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    delay: `${Math.random() * 5}s`,
+    duration: `${4 + Math.random() * 3}s`
+  }))
+
+  return (
+    <div className="particles">
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="particle particle-twinkle"
+          style={{
+            left: p.left,
+            top: p.top,
+            animationDelay: p.delay,
+            animationDuration: p.duration
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+// Background simplifié
+function SimpleBackground() {
+  return (
+    <>
+      <div className="animated-bg">
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
+      </div>
+      <div className="grid-lines" />
+      <SimpleParticles />
+      <div className="noise-overlay" />
+    </>
+  )
 }
 
 export default function CheckoutPage() {
@@ -56,98 +99,109 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-dark flex items-center justify-center px-4">
-      <div className="max-w-2xl w-full">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-hvc-gold transition-colors mb-6">
+    <main className="relative min-h-screen flex items-center justify-center px-6 py-12">
+      <SimpleBackground />
+
+      <div className="relative z-10 max-w-2xl w-full">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-mist hover:text-champagne transition-colors mb-8"
+          >
             <ArrowLeft className="w-4 h-4" />
-            Retour
+            <span>Retour</span>
           </Link>
 
           <Image
             src="/logo-hvc-white.png"
             alt="High Value Capital"
-            width={200}
-            height={72}
+            width={180}
+            height={65}
             className="mx-auto mb-6"
           />
 
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">
-            Formation Trading <span className="text-gradient">Premium</span>
+          <h1 className="font-display text-3xl md:text-4xl font-medium mb-3">
+            Formation Trading <span className="italic text-gradient-gold">Premium</span>
           </h1>
-          <p className="text-gray-400">Paiement sécurisé par Stripe</p>
+          <p className="text-mist">Paiement sécurisé par Stripe</p>
         </div>
 
-        <div className="bg-hvc-dark/50 border border-hvc-gold/20 rounded-2xl p-8 md:p-12 backdrop-blur-sm">
+        {/* Card principale */}
+        <div className="card-highlight p-8 md:p-12 rounded-2xl glow-gold">
           {loading && !error && (
-            <div className="text-center py-12">
-              <Loader2 className="w-12 h-12 text-hvc-gold mx-auto mb-4 animate-spin" />
-              <p className="text-gray-300 text-lg">Redirection vers le paiement sécurisé...</p>
-              <p className="text-gray-500 text-sm mt-2">Veuillez patienter quelques secondes</p>
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-champagne/10 rounded-full mb-6">
+                <Loader2 className="w-8 h-8 text-champagne animate-spin" />
+              </div>
+              <p className="text-ivory text-lg font-medium mb-2">Redirection vers le paiement sécurisé...</p>
+              <p className="text-mist text-sm">Veuillez patienter quelques secondes</p>
             </div>
           )}
 
           {error && (
-            <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4">
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-6">
                 <span className="text-3xl">⚠️</span>
               </div>
-              <h2 className="text-xl font-bold mb-2">Une erreur est survenue</h2>
-              <p className="text-gray-400 mb-6">{error}</p>
+              <h2 className="font-display text-xl font-medium mb-3 text-ivory">Une erreur est survenue</h2>
+              <p className="text-mist mb-8">{error}</p>
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 bg-gradient-gold text-hvc-dark font-bold px-6 py-3 rounded-lg hover:opacity-90 transition-all"
+                className="btn-primary inline-flex"
               >
-                <ArrowLeft className="w-4 h-4" />
-                Retour à l'accueil
+                <span className="flex items-center gap-2">
+                  <ArrowLeft className="w-4 h-4" />
+                  Retour à l'accueil
+                </span>
               </Link>
             </div>
           )}
 
           {loading && !error && (
-            <div className="mt-8 pt-8 border-t border-hvc-gold/10">
-              <h3 className="font-semibold mb-4 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-hvc-gold" />
-                Ce que tu vas recevoir
-              </h3>
-              <ul className="space-y-2 text-gray-300 text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-hvc-gold mt-1">✓</span>
-                  <span>Accès complet à la formation ARD (7+ modules)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-hvc-gold mt-1">✓</span>
-                  <span>Groupe privé Premium sur Heartbeat</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-hvc-gold mt-1">✓</span>
-                  <span>Lives hebdomadaires exclusifs</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-hvc-gold mt-1">✓</span>
-                  <span>Support communauté active 24/7</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-hvc-gold mt-1">✓</span>
-                  <span>Garantie satisfait ou remboursé 7 jours</span>
-                </li>
-              </ul>
+            <>
+              <div className="gradient-line my-8" />
 
-              <div className="mt-6 p-4 bg-hvc-gold/5 border border-hvc-gold/20 rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Prix</span>
-                  <span className="text-2xl font-bold text-hvc-gold">97€</span>
+              <div>
+                <h3 className="font-display text-lg font-medium mb-5 flex items-center gap-2 text-ivory">
+                  <Zap className="w-5 h-5 text-champagne" />
+                  Ce que tu vas recevoir
+                </h3>
+                <ul className="space-y-3">
+                  {[
+                    'Accès complet à la formation ARD (7+ modules)',
+                    'Groupe privé Premium sur Heartbeat',
+                    'Lives hebdomadaires exclusifs',
+                    'Support communauté active 24/7',
+                    'Garantie satisfait ou remboursé 7 jours',
+                  ].map((item, index) => (
+                    <li key={index} className="flex items-start gap-3 text-pearl">
+                      <CheckCircle className="w-5 h-5 text-champagne flex-shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-8 p-5 bg-glass border border-champagne/20 rounded-xl">
+                  <div className="flex justify-between items-center">
+                    <span className="text-mist">Prix</span>
+                    <span className="font-display text-3xl font-medium text-champagne">97€</span>
+                  </div>
+                  <p className="text-smoke text-xs mt-2">Paiement unique • Accès à vie</p>
                 </div>
-                <p className="text-gray-500 text-xs mt-2">Paiement unique • Accès à vie</p>
               </div>
-            </div>
+            </>
           )}
         </div>
 
-        <div className="text-center mt-6 text-gray-500 text-sm">
-          <p>🔒 Paiement 100% sécurisé • Cryptage SSL • Données protégées par Stripe</p>
+        {/* Footer sécurité */}
+        <div className="text-center mt-8">
+          <div className="inline-flex items-center gap-2 text-mist text-sm">
+            <Shield className="w-4 h-4 text-champagne/70" />
+            <span>Paiement 100% sécurisé • Cryptage SSL • Données protégées par Stripe</span>
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

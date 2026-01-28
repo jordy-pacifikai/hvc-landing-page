@@ -1,85 +1,131 @@
 'use client'
 
-import { CheckCircle, MessageCircle, Video, ArrowRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { CheckCircle, MessageCircle, ArrowRight, Sparkles, Mail, BookOpen, Users } from 'lucide-react'
+
+// Particules simplifiées
+function SimpleParticles() {
+  const particles = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    delay: `${Math.random() * 5}s`,
+    duration: `${4 + Math.random() * 3}s`
+  }))
+
+  return (
+    <div className="particles">
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="particle particle-twinkle"
+          style={{
+            left: p.left,
+            top: p.top,
+            animationDelay: p.delay,
+            animationDuration: p.duration
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+// Background simplifié
+function SimpleBackground() {
+  return (
+    <>
+      <div className="animated-bg">
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
+        <div className="orb orb-3" />
+      </div>
+      <div className="grid-lines" />
+      <SimpleParticles />
+      <div className="noise-overlay" />
+    </>
+  )
+}
 
 export default function ThankYouPage() {
   return (
-    <div className="min-h-screen bg-gradient-dark flex items-center justify-center px-4">
-      <div className="max-w-2xl w-full">
+    <main className="relative min-h-screen flex items-center justify-center px-6 py-12">
+      <SimpleBackground />
+
+      <div className="relative z-10 max-w-2xl w-full">
         {/* Logo */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-10">
           <Image
             src="/logo-hvc-white.png"
             alt="High Value Capital"
-            width={200}
-            height={72}
+            width={180}
+            height={65}
             className="mx-auto"
           />
         </div>
 
         {/* Card principale */}
-        <div className="bg-hvc-dark/50 border border-hvc-gold/20 rounded-2xl p-8 md:p-12 text-center backdrop-blur-sm">
-          {/* Icon success */}
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-gold rounded-full mb-6">
-            <CheckCircle className="w-12 h-12 text-hvc-dark" />
+        <div className="card-highlight p-8 md:p-12 rounded-2xl text-center glow-gold-intense">
+          {/* Icon success avec animation */}
+          <div className="animate-scale-in opacity-0 inline-flex items-center justify-center w-20 h-20 bg-gradient-gold rounded-full mb-8 glow-gold">
+            <CheckCircle className="w-12 h-12 text-void" />
           </div>
 
           {/* Titre */}
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
+          <h1 className="animate-fade-up delay-100 opacity-0 font-display text-3xl md:text-4xl font-medium mb-4">
             Bienvenue dans la{' '}
-            <span className="text-gradient">High Value Family</span> ! 🎉
+            <span className="italic text-gradient-gold">High Value Family</span> !
           </h1>
 
           {/* Message */}
-          <p className="text-gray-300 text-lg mb-8">
+          <p className="animate-fade-up delay-200 opacity-0 text-pearl text-lg mb-10">
             Ton paiement a été confirmé avec succès. Tu as maintenant accès à la{' '}
-            <strong className="text-hvc-gold">Formation Trading Premium</strong>.
+            <span className="text-champagne font-medium">Formation Trading Premium</span>.
           </p>
 
           {/* Étapes suivantes */}
-          <div className="bg-hvc-dark/80 border border-hvc-gold/10 rounded-xl p-6 mb-8 text-left">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <ArrowRight className="w-5 h-5 text-hvc-gold" />
+          <div className="animate-fade-up delay-300 opacity-0 bg-glass border border-champagne/10 rounded-xl p-6 md:p-8 mb-10 text-left">
+            <h2 className="font-display text-xl font-medium mb-6 flex items-center gap-2 text-ivory">
+              <Sparkles className="w-5 h-5 text-champagne" />
               Prochaines étapes
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Étape 1 */}
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-hvc-gold/20 rounded-full flex items-center justify-center text-hvc-gold font-bold">
-                  1
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-champagne/10 rounded-full flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-champagne" />
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Email de confirmation en cours</h3>
-                  <p className="text-gray-400 text-sm">
+                  <h3 className="font-medium text-ivory mb-1">Email de confirmation en cours</h3>
+                  <p className="text-mist text-sm leading-relaxed">
                     Vérifie ta boîte mail (et tes spams) pour ton reçu et tes accès Heartbeat.
                   </p>
                 </div>
               </div>
 
               {/* Étape 2 */}
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-hvc-gold/20 rounded-full flex items-center justify-center text-hvc-gold font-bold">
-                  2
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-champagne/10 rounded-full flex items-center justify-center">
+                  <Users className="w-5 h-5 text-champagne" />
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Rejoins la communauté Heartbeat</h3>
-                  <p className="text-gray-400 text-sm">
+                  <h3 className="font-medium text-ivory mb-1">Rejoins la communauté Heartbeat</h3>
+                  <p className="text-mist text-sm leading-relaxed">
                     Accède à tous les modules, lives hebdomadaires et groupe privé Premium.
                   </p>
                 </div>
               </div>
 
               {/* Étape 3 */}
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-hvc-gold/20 rounded-full flex items-center justify-center text-hvc-gold font-bold">
-                  3
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-champagne/10 rounded-full flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-champagne" />
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Démarre ta formation</h3>
-                  <p className="text-gray-400 text-sm">
+                  <h3 className="font-medium text-ivory mb-1">Démarre ta formation</h3>
+                  <p className="text-mist text-sm leading-relaxed">
                     Commence par le Module 1 : Fondations ARD et progresse à ton rythme.
                   </p>
                 </div>
@@ -88,34 +134,42 @@ export default function ThankYouPage() {
           </div>
 
           {/* CTA principal */}
-          <a
-            href="https://www.community.highvaluecapital.club"
-            className="inline-flex items-center gap-2 bg-gradient-gold text-hvc-dark font-bold px-8 py-4 rounded-lg text-lg hover:opacity-90 transition-all transform hover:scale-105 shadow-lg shadow-hvc-gold/25 mb-6"
-          >
-            <MessageCircle className="w-5 h-5" />
-            Accéder à Heartbeat
-          </a>
-
-          {/* Message support */}
-          <p className="text-gray-400 text-sm">
-            Un problème ? Contacte-nous directement sur{' '}
+          <div className="animate-fade-up delay-400 opacity-0">
             <a
               href="https://www.community.highvaluecapital.club"
-              className="text-hvc-gold hover:underline"
+              className="btn-primary text-lg group inline-flex glow-gold"
             >
-              Heartbeat
-            </a>{' '}
-            ou par email.
-          </p>
+              <span className="flex items-center gap-2">
+                <MessageCircle className="w-5 h-5" />
+                Accéder à Heartbeat
+                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+              </span>
+            </a>
+
+            {/* Message support */}
+            <p className="text-mist text-sm mt-6">
+              Un problème ? Contacte-nous directement sur{' '}
+              <a
+                href="https://www.community.highvaluecapital.club"
+                className="text-champagne hover:text-gold-light transition-colors"
+              >
+                Heartbeat
+              </a>{' '}
+              ou par email.
+            </p>
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-8 text-gray-500 text-sm">
-          <Link href="/" className="hover:text-hvc-gold transition-colors">
+        <div className="text-center mt-10">
+          <Link
+            href="/"
+            className="text-mist hover:text-champagne transition-colors text-sm"
+          >
             ← Retour à l'accueil
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   )
 }
