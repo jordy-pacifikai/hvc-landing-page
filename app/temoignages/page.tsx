@@ -306,7 +306,7 @@ const testimonials = [
     type: 'Message Heartbeat',
     category: 'learning',
     text: "Merci pour toutes vos vidéos de formation, c'est nickel ! L'expérience est incroyable, tout le monde est à fond, ça donne envie de se donner à fond aussi.",
-    screenshot: 'https://dl.dropboxusercontent.com/scl/fi/z7s5gcidm7hkr5snjyxkg/Tutex_Tnr.png?rlkey=4yub6lvt2pkqwic5io4g5r&raw=1',
+    screenshot: 'https://dl.dropboxusercontent.com/scl/fi/z7s5gcidm7hkr5snjyxkg/Tutex_Tnr.png?rlkey=4yub6lvt2pkqwt0gic5io4g5r&raw=1',
     impactScore: 5
   },
   {
@@ -514,6 +514,11 @@ export default function TestimonialsPage() {
                       alt={`Témoignage de ${testimonial.name}`}
                       className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
                       loading="lazy"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        target.parentElement!.style.display = 'none'
+                      }}
                     />
                     <div className="absolute inset-0 bg-void/0 group-hover:bg-void/20 transition-colors flex items-center justify-center">
                       <span className="opacity-0 group-hover:opacity-100 transition-opacity text-champagne text-sm font-medium">
