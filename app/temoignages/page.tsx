@@ -140,16 +140,6 @@ const testimonials = [
     impactScore: 9
   },
   {
-    id: 'recHsw8CLlmT0J49T',
-    name: 'Clayton LI',
-    result: '34 Risk-Reward cumulés',
-    type: 'Screenshot résultats',
-    category: 'results',
-    text: "J'accumule 34 Risk-Reward sur mes trades. Ma stratégie montre une maîtrise exceptionnelle du money management grâce aux concepts HVC.",
-    screenshot: 'https://www.dropbox.com/scl/fo/8rambyfyuwfrifbqyhrwx/AJoMPzURJalasNQaYVYVOnM/CleanShot%202024-06-22%20at%2020.07.10%402x.png?rlkey=8ftiui84sg2moc01rtis8f44s&raw=1',
-    impactScore: 9
-  },
-  {
     id: 'rec6wMP9up5k7uEg7',
     name: 'Aro S',
     result: 'Première propfirm validée',
