@@ -25,7 +25,7 @@ import {
 
 // URLs
 const URLS = {
-  free: '/gratuit',
+  discord: 'https://discord.gg/nwc8kbxSVt',
   premium: '/checkout',
   testimonials: '/temoignages'
 }
@@ -259,16 +259,16 @@ function Hero() {
 
         {/* CTAs */}
         <div className="animate-fade-up delay-400 opacity-0 flex flex-col sm:flex-row gap-5 justify-center mb-16">
-          <a href={URLS.free} className="btn-primary text-lg group">
+          <a href={URLS.premium} className="btn-primary text-lg group">
             <span className="flex items-center gap-2">
-              Commencer Gratuitement
+              Rejoindre la Formation
+              <span className="text-gold-light">97€</span>
               <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </span>
           </a>
-          <a href={URLS.premium} className="btn-secondary text-lg group">
+          <a href={URLS.discord} className="btn-secondary text-lg group" target="_blank" rel="noopener noreferrer">
             <span className="flex items-center gap-2">
-              Formation Premium
-              <span className="text-gold-light">97€</span>
+              Rejoindre le Discord
             </span>
           </a>
         </div>
@@ -614,41 +614,9 @@ function Pricing() {
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Plan Gratuit */}
-          <div className={`card p-10 transition-all duration-700 ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '200ms' }}>
-            <h3 className="font-display text-3xl font-medium mb-2 text-ivory">Formation Gratuite</h3>
-            <div className="font-display text-5xl text-champagne mb-8">0€</div>
-
-            <ul className="space-y-4 mb-10">
-              {[
-                'Accès à la communauté Discord',
-                'Modules de base sur les concepts de liquidité',
-                'Accès aux discussions et partages de trades',
-                'Support communautaire',
-              ].map((item, index) => (
-                <li key={index} className="flex items-start gap-4">
-                  <CheckCircle className="w-5 h-5 text-champagne flex-shrink-0 mt-0.5" />
-                  <span className="text-pearl">{item}</span>
-                </li>
-              ))}
-            </ul>
-
-            <a href={URLS.free} className="btn-secondary w-full text-center block">
-              <span>Commencer Gratuitement</span>
-            </a>
-          </div>
-
-          {/* Plan Premium */}
-          <div className={`relative card-highlight p-10 glow-gold-intense transition-all duration-700 rounded-2xl ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '300ms' }}>
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-              <span className="bg-gradient-gold text-void text-sm font-bold px-5 py-1.5 rounded-full flex items-center gap-2">
-                <Zap className="w-4 h-4" />
-                RECOMMANDÉ
-              </span>
-            </div>
-
-            <h3 className="font-display text-3xl font-medium mb-2 text-ivory">Formation Premium</h3>
+        <div className="max-w-lg mx-auto">
+          <div className={`relative card-highlight p-10 glow-gold-intense transition-all duration-700 rounded-2xl ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '200ms' }}>
+            <h3 className="font-display text-3xl font-medium mb-2 text-ivory">Formation HVC</h3>
             <div className="flex items-baseline gap-3 mb-8">
               <span className="font-display text-5xl text-champagne">97€</span>
               <span className="text-mist">paiement unique</span>
@@ -656,11 +624,11 @@ function Pricing() {
 
             <ul className="space-y-4 mb-10">
               {[
-                'TOUT ce qui est inclus dans la formation gratuite',
                 'Formation complète avancée (20+ heures)',
-                'Accès au groupe Premium privé',
+                'Communauté Discord privée',
                 'Sessions live hebdomadaires',
                 'Analyses de trades personnalisées',
+                'Signaux IA en temps réel',
                 'Templates et outils exclusifs',
                 'Accès à vie + mises à jour',
               ].map((item, index) => (
@@ -673,13 +641,13 @@ function Pricing() {
 
             <a href={URLS.premium} className="btn-primary w-full text-center block text-lg">
               <span className="flex items-center justify-center gap-2">
-                Rejoindre Premium
+                Rejoindre HVC
                 <ArrowRight className="w-5 h-5" />
               </span>
             </a>
 
             <p className="text-center text-sm text-mist mt-5">
-              95% de nos Funded Traders ont choisi cette option
+              95% de nos Funded Traders ont choisi cette formation
             </p>
           </div>
         </div>
@@ -806,14 +774,14 @@ function FinalCTA() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-5 justify-center">
-            <a href={URLS.free} className="btn-secondary text-lg">
-              <span>Commencer Gratuitement</span>
-            </a>
             <a href={URLS.premium} className="btn-primary text-lg group">
               <span className="flex items-center gap-2">
-                Rejoindre Premium - 97€
+                Rejoindre HVC - 97€
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </span>
+            </a>
+            <a href={URLS.discord} className="btn-secondary text-lg" target="_blank" rel="noopener noreferrer">
+              <span>Voir le Discord</span>
             </a>
           </div>
         </div>

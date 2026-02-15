@@ -588,20 +588,22 @@ export default function TestimonialsPage() {
 
           <div className="flex flex-col sm:flex-row gap-5 justify-center">
             <Link
-              href="/gratuit"
-              className="btn-secondary text-lg"
-            >
-              <span>Commencer Gratuitement</span>
-            </Link>
-            <Link
               href="/checkout"
               className="btn-primary text-lg group"
             >
               <span className="flex items-center gap-2">
-                Formation Premium - 97€
+                Rejoindre HVC - 97€
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </span>
             </Link>
+            <a
+              href="https://discord.gg/nwc8kbxSVt"
+              className="btn-secondary text-lg"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span>Voir le Discord</span>
+            </a>
           </div>
 
           <div className="mt-8 flex flex-wrap gap-6 justify-center items-center text-sm text-mist">
