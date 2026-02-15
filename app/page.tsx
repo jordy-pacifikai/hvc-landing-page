@@ -442,7 +442,7 @@ function Solution() {
     {
       icon: Users,
       title: 'Communauté active',
-      description: 'Rejoins un groupe de traders sur Heartbeat. Partage de trades quotidien, analyses en temps réel.'
+      description: 'Rejoins un groupe de traders sur Discord. Partage de trades quotidien, analyses en temps réel.'
     },
     {
       icon: Video,
@@ -622,7 +622,7 @@ function Pricing() {
 
             <ul className="space-y-4 mb-10">
               {[
-                'Accès à la communauté Heartbeat',
+                'Accès à la communauté Discord',
                 'Modules de base sur les concepts de liquidité',
                 'Accès aux discussions et partages de trades',
                 'Support communautaire',

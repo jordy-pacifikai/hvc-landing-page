@@ -152,11 +152,13 @@ export default function FormationGratuitePage() {
 
           <div className="animate-fade-up delay-400 opacity-0">
             <a
-              href="https://www.community.highvaluecapital.club/invitation?code=E573F8#landing-page"
+              href="https://discord.gg/nwc8kbxSVt"
               className="btn-primary text-lg group inline-flex"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <span className="flex items-center gap-2">
-                Accéder à la Formation Gratuite
+                Rejoindre le Discord HVC
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </span>
             </a>
@@ -191,7 +193,7 @@ export default function FormationGratuitePage() {
               {
                 icon: MessageCircle,
                 title: 'Communauté Active',
-                description: 'Accède à un groupe privé sur Heartbeat avec des traders motivés qui partagent leurs résultats.'
+                description: 'Accède à un serveur Discord privé avec des traders motivés qui partagent leurs résultats.'
               }
             ].map((item, index) => (
               <div
@@ -245,15 +247,17 @@ export default function FormationGratuitePage() {
 
             <div className="mt-10 text-center">
               <a
-                href="https://www.community.highvaluecapital.club/invitation?code=E573F8#landing-page"
+                href="https://discord.gg/nwc8kbxSVt"
                 className="btn-primary text-lg group inline-flex"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <span className="flex items-center gap-2">
-                  Rejoindre Maintenant
+                  Rejoindre le Discord
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </span>
               </a>
-              <p className="text-smoke text-sm mt-4">Pas de CB • Pas de spam • Accès instantané</p>
+              <p className="text-smoke text-sm mt-4">Pas de CB - Pas de spam - Acces instantane</p>
             </div>
           </div>
         </div>
@@ -315,11 +319,13 @@ export default function FormationGratuitePage() {
           </p>
 
           <a
-            href="https://www.community.highvaluecapital.club/invitation?code=E573F8#landing-page"
+            href="https://discord.gg/nwc8kbxSVt"
             className="btn-primary text-xl group inline-flex"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             <span className="flex items-center gap-2">
-              Accéder à la Formation Gratuite
+              Rejoindre le Discord HVC
               <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </span>
           </a>

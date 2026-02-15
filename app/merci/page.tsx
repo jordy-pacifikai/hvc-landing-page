@@ -100,7 +100,7 @@ export default function ThankYouPage() {
                 <div>
                   <h3 className="font-medium text-ivory mb-1">Email de confirmation en cours</h3>
                   <p className="text-mist text-sm leading-relaxed">
-                    Vérifie ta boîte mail (et tes spams) pour ton reçu et tes accès Heartbeat.
+                    Vérifie ta boîte mail (et tes spams) pour ton reçu Stripe.
                   </p>
                 </div>
               </div>
@@ -111,7 +111,7 @@ export default function ThankYouPage() {
                   <Users className="w-5 h-5 text-champagne" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-ivory mb-1">Rejoins la communauté Heartbeat</h3>
+                  <h3 className="font-medium text-ivory mb-1">Rejoins le Discord HVC</h3>
                   <p className="text-mist text-sm leading-relaxed">
                     Accède à tous les modules, lives hebdomadaires et groupe privé Premium.
                   </p>
@@ -136,12 +136,14 @@ export default function ThankYouPage() {
           {/* CTA principal */}
           <div className="animate-fade-up delay-400 opacity-0">
             <a
-              href="https://www.community.highvaluecapital.club"
+              href="https://discord.gg/nwc8kbxSVt"
               className="btn-primary text-lg group inline-flex glow-gold"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <span className="flex items-center gap-2">
                 <MessageCircle className="w-5 h-5" />
-                Accéder à Heartbeat
+                Rejoindre le Discord
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </span>
             </a>
@@ -150,10 +152,12 @@ export default function ThankYouPage() {
             <p className="text-mist text-sm mt-6">
               Un problème ? Contacte-nous directement sur{' '}
               <a
-                href="https://www.community.highvaluecapital.club"
+                href="https://discord.gg/nwc8kbxSVt"
                 className="text-champagne hover:text-gold-light transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                Heartbeat
+                Discord
               </a>{' '}
               ou par email.
             </p>

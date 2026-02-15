@@ -170,7 +170,7 @@ export default function CheckoutPage() {
                 <ul className="space-y-3">
                   {[
                     'Accès complet à la formation ARD (7+ modules)',
-                    'Groupe privé Premium sur Heartbeat',
+                    'Groupe privé Premium sur Discord',
                     'Lives hebdomadaires exclusifs',
                     'Support communauté active 24/7',
                     'Garantie satisfait ou remboursé 7 jours',
