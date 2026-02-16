@@ -628,7 +628,7 @@ function Pricing() {
                 'Communauté Discord privée',
                 'Sessions live hebdomadaires',
                 'Analyses de trades personnalisées',
-                'Signaux IA en temps réel',
+                'Signaux du scanner en temps réel',
                 'Templates et outils exclusifs',
                 'Accès à vie + mises à jour',
               ].map((item, index) => (
