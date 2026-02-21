@@ -9,7 +9,7 @@
 
 Créer et déployer une landing page professionnelle pour HVC avec données réelles de réussite.
 
-**✅ Site Live :** https://genuine-faun-d64a20.netlify.app/
+**✅ Site Live :** https://highvaluecapital.vercel.app/ (migré depuis Netlify)
 
 ---
 
@@ -97,11 +97,15 @@ landing-page/
 
 | Ressource | URL |
 |-----------|-----|
-| **Site Live** | https://genuine-faun-d64a20.netlify.app/ |
-| **Repo GitHub** | https://github.com/Jordybanks689/hvc-landing-page |
-| **Netlify Dashboard** | https://app.netlify.com/sites/genuine-faun-d64a20 |
-| **Formation Gratuite** | https://www.community.highvaluecapital.club/invitation?code=E573F8#landing-page |
-| **Formation Premium** | https://www.community.highvaluecapital.club/invitation?code=567G8G&price=oneTime#checkout |
+| **Site Live (Vercel)** | https://highvaluecapital.vercel.app/ |
+| **Page Gratuit** | https://highvaluecapital.vercel.app/gratuit |
+| **Page Checkout** | https://highvaluecapital.vercel.app/checkout |
+| **Page Merci** | https://highvaluecapital.vercel.app/merci |
+| **Repo GitHub** | https://github.com/jordy-pacifikai/hvc-landing-page |
+| **Formation Gratuite (Heartbeat)** | https://www.community.highvaluecapital.club/invitation?code=E573F8#landing-page |
+| **Formation Premium (Heartbeat)** | https://www.community.highvaluecapital.club/invitation?code=567G8G&price=oneTime#checkout |
+
+> **Note**: Migré de Netlify vers Vercel le 22 janvier 2026 (Netlify suspendu - dépassement crédits)
 
 ---
 
@@ -232,3 +236,31 @@ git commit -m "message"
 ---
 
 **Session terminée avec succès ✅**
+
+---
+
+## 🔄 Migration Vercel (22 janvier 2026)
+
+### Contexte
+Netlify suspendu suite au dépassement des 300 crédits gratuits.
+
+### Actions
+1. **Nouveau compte GitHub**: `jordy-pacifikai`
+2. **Nouveau repo**: https://github.com/jordy-pacifikai/hvc-landing-page
+3. **Déploiement Vercel**: https://highvaluecapital.vercel.app/
+4. **URLs Stripe mises à jour** vers Vercel
+
+### Variables d'environnement Vercel
+- `STRIPE_SECRET_KEY`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+
+### Workflow Newsletter
+- Vérifié: aucune référence Netlify
+- Prêt pour mercredi 8h
+
+### Optimisations Landing Page
+- Témoignages avec screenshots ajoutés
+- Stats à jour (7+ funded, 20k$+ payouts, 150+ membres)
+- Page `/gratuit` créée pour formation gratuite
+
+**Status**: ✅ Migration terminée, site live sur Vercel
