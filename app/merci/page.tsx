@@ -2,9 +2,8 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { CheckCircle, MessageCircle, ArrowRight, Sparkles, Mail, BookOpen, Users } from 'lucide-react'
+import { CheckCircle, MessageCircle, ArrowRight, Sparkles, Mail, BookOpen, Shield } from 'lucide-react'
 
-// Particules simplifiées
 function SimpleParticles() {
   const particles = Array.from({ length: 20 }, (_, i) => ({
     id: i,
@@ -32,7 +31,6 @@ function SimpleParticles() {
   )
 }
 
-// Background simplifié
 function SimpleBackground() {
   return (
     <>
@@ -67,7 +65,7 @@ export default function ThankYouPage() {
 
         {/* Card principale */}
         <div className="card-highlight p-8 md:p-12 rounded-2xl text-center glow-gold-intense">
-          {/* Icon success avec animation */}
+          {/* Icon success */}
           <div className="animate-scale-in opacity-0 inline-flex items-center justify-center w-20 h-20 bg-gradient-gold rounded-full mb-8 glow-gold">
             <CheckCircle className="w-12 h-12 text-void" />
           </div>
@@ -80,8 +78,9 @@ export default function ThankYouPage() {
 
           {/* Message */}
           <p className="animate-fade-up delay-200 opacity-0 text-pearl text-lg mb-10">
-            Ton paiement a été confirmé avec succès. Tu as maintenant accès à la{' '}
-            <span className="text-champagne font-medium">Formation Trading Premium</span>.
+            Ton paiement a été confirmé avec succès. Ton rôle{' '}
+            <span className="text-champagne font-medium">Premium</span>{' '}
+            Discord a été attribué automatiquement.
           </p>
 
           {/* Étapes suivantes */}
@@ -92,33 +91,30 @@ export default function ThankYouPage() {
             </h2>
 
             <div className="space-y-6">
-              {/* Étape 1 */}
               <div className="flex gap-4">
                 <div className="flex-shrink-0 w-10 h-10 bg-champagne/10 rounded-full flex items-center justify-center">
                   <Mail className="w-5 h-5 text-champagne" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-ivory mb-1">Email de confirmation en cours</h3>
+                  <h3 className="font-medium text-ivory mb-1">Email de confirmation envoyé</h3>
                   <p className="text-mist text-sm leading-relaxed">
                     Vérifie ta boîte mail (et tes spams) pour ton reçu Stripe.
                   </p>
                 </div>
               </div>
 
-              {/* Étape 2 */}
               <div className="flex gap-4">
                 <div className="flex-shrink-0 w-10 h-10 bg-champagne/10 rounded-full flex items-center justify-center">
-                  <Users className="w-5 h-5 text-champagne" />
+                  <Shield className="w-5 h-5 text-champagne" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-ivory mb-1">Rejoins le Discord HVC</h3>
+                  <h3 className="font-medium text-ivory mb-1">Rôle Premium activé</h3>
                   <p className="text-mist text-sm leading-relaxed">
-                    Accède à tous les modules, lives hebdomadaires et groupe privé Premium.
+                    Tu as été ajouté au serveur Discord avec l'accès Premium. Tous les channels de formation et trading sont débloqués.
                   </p>
                 </div>
               </div>
 
-              {/* Étape 3 */}
               <div className="flex gap-4">
                 <div className="flex-shrink-0 w-10 h-10 bg-champagne/10 rounded-full flex items-center justify-center">
                   <BookOpen className="w-5 h-5 text-champagne" />
@@ -133,7 +129,7 @@ export default function ThankYouPage() {
             </div>
           </div>
 
-          {/* CTA principal */}
+          {/* CTA Discord */}
           <div className="animate-fade-up delay-400 opacity-0">
             <a
               href="https://discord.gg/nwc8kbxSVt"
@@ -143,14 +139,13 @@ export default function ThankYouPage() {
             >
               <span className="flex items-center gap-2">
                 <MessageCircle className="w-5 h-5" />
-                Rejoindre le Discord
+                Ouvrir Discord
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </span>
             </a>
 
-            {/* Message support */}
             <p className="text-mist text-sm mt-6">
-              Un problème ? Contacte-nous directement sur{' '}
+              Un problème ? Contacte-nous sur{' '}
               <a
                 href="https://discord.gg/nwc8kbxSVt"
                 className="text-champagne hover:text-gold-light transition-colors"

@@ -333,8 +333,8 @@ const testimonials = [
 
 // Stats calculées
 const stats = [
-  { value: '7+', label: 'Funded Traders', icon: Award },
-  { value: '20k$+', label: 'Payouts Documentés', icon: DollarSign },
+  { value: '15+', label: 'Funded Traders', icon: Award },
+  { value: '85k$+', label: 'Payouts Documentés', icon: DollarSign },
   { value: '30+', label: 'Témoignages', icon: Users },
 ]
 
@@ -384,7 +384,7 @@ export default function TestimonialsPage() {
           <div className="flex justify-between items-center">
             <Link href="/">
               <Image
-                src="/logo-hvc-white.png"
+                src="/logo-hvc-gradient.png"
                 alt="High Value Capital"
                 width={140}
                 height={50}
@@ -592,18 +592,10 @@ export default function TestimonialsPage() {
               className="btn-primary text-lg group"
             >
               <span className="flex items-center gap-2">
-                Rejoindre HVC - 97€
+                Rejoindre HVC - 49€/mois
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </span>
             </Link>
-            <a
-              href="https://discord.gg/nwc8kbxSVt"
-              className="btn-secondary text-lg"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span>Voir le Discord</span>
-            </a>
           </div>
 
           <div className="mt-8 flex flex-wrap gap-6 justify-center items-center text-sm text-mist">
@@ -613,7 +605,7 @@ export default function TestimonialsPage() {
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-champagne/70" />
-              <span>Accès à vie</span>
+              <span>Sans engagement</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-champagne/70" />

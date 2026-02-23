@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   if (!STRIPE_SECRET_KEY) {
     return NextResponse.json(
       { error: 'Stripe configuration missing' },
@@ -11,21 +11,37 @@ export async function POST() {
   }
 
   try {
+    const body = await req.json().catch(() => ({}))
+    const discordId = body.discord_id || ''
+    const discordUsername = body.discord_username || ''
+    const discordToken = body.discord_token || ''
+
+    const params: Record<string, string> = {
+      'mode': 'subscription',
+      'line_items[0][price]': 'price_1T3XqIDFDOh4UH0d1crOCUUU',
+      'line_items[0][quantity]': '1',
+      'success_url': 'https://www.highvaluecapital.club/merci',
+      'cancel_url': 'https://www.highvaluecapital.club/',
+      'allow_promotion_codes': 'true',
+      'billing_address_collection': 'auto',
+    }
+
+    // Store Discord info in subscription metadata
+    if (discordId) {
+      params['subscription_data[metadata][discord_user_id]'] = discordId
+      params['subscription_data[metadata][discord_username]'] = discordUsername
+      params['subscription_data[metadata][discord_token]'] = discordToken
+      params['metadata[discord_user_id]'] = discordId
+      params['metadata[discord_username]'] = discordUsername
+    }
+
     const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${STRIPE_SECRET_KEY}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams({
-        'mode': 'payment',
-        'line_items[0][price]': 'price_1SsJFaDFDOh4UH0dk4ACImvm',
-        'line_items[0][quantity]': '1',
-        'success_url': 'https://highvaluecapital.vercel.app/merci',
-        'cancel_url': 'https://highvaluecapital.vercel.app/',
-        'allow_promotion_codes': 'true',
-        'billing_address_collection': 'auto',
-      }).toString(),
+      body: new URLSearchParams(params).toString(),
     })
 
     const session = await response.json()

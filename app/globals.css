@@ -5,21 +5,24 @@
 @tailwind utilities;
 
 :root {
-  /* Palette Editorial Luxury */
-  --color-void: #050506;
-  --color-obsidian: #0a0a0b;
-  --color-charcoal: #141416;
-  --color-slate: #1c1c1f;
-  --color-smoke: #2a2a2e;
+  /* Palette Gradient Moderne */
+  --color-void: #08090d;
+  --color-obsidian: #0a0b10;
+  --color-charcoal: #111318;
+  --color-slate: #1a1c24;
+  --color-smoke: #252730;
 
-  --color-champagne: #c9a959;
-  --color-gold: #d4af37;
-  --color-gold-light: #e8c864;
-  --color-gold-pale: #f5e6b8;
+  --color-champagne: #3b82f6;
+  --color-gold: #6366f1;
+  --color-gold-light: #8b5cf6;
+  --color-gold-pale: #a78bfa;
 
-  --color-ivory: #f8f6f2;
-  --color-pearl: #e8e6e2;
-  --color-mist: #9a9a9e;
+  --color-ivory: #f0f0f5;
+  --color-pearl: #e0e0e8;
+  --color-mist: #8888a0;
+
+  /* Accent */
+  --color-cyan: #06b6d4;
 
   /* Animations */
   --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
@@ -28,6 +31,9 @@
 
 html {
   scroll-behavior: smooth;
+  /* Prevent any child element from causing horizontal scroll */
+  overflow-x: hidden;
+  width: 100%;
 }
 
 body {
@@ -36,6 +42,9 @@ body {
   font-family: 'Outfit', -apple-system, sans-serif;
   font-weight: 400;
   overflow-x: hidden;
+  width: 100%;
+  /* Ensure body never exceeds viewport width */
+  max-width: 100vw;
 }
 
 /* Typography */
@@ -77,12 +86,13 @@ body {
   top: -100%;
   left: -100%;
   background:
-    radial-gradient(ellipse 800px 600px at 20% 30%, rgba(201, 169, 89, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse 600px 600px at 80% 20%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse 500px 700px at 70% 80%, rgba(201, 169, 89, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse 700px 500px at 10% 70%, rgba(232, 200, 100, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse 400px 400px at 50% 50%, rgba(201, 169, 89, 0.05) 0%, transparent 60%);
+    radial-gradient(ellipse 800px 600px at 20% 30%, rgba(59, 130, 246, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 600px 600px at 80% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse 500px 700px at 70% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse 700px 500px at 10% 70%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 400px 400px at 50% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 60%);
   animation: aurora 40s ease-in-out infinite;
+  z-index: 0;
 }
 
 .animated-bg::after {
@@ -92,6 +102,7 @@ body {
   height: 100%;
   background:
     radial-gradient(circle 1000px at 50% 50%, transparent 0%, var(--color-void) 60%);
+  z-index: 0;
 }
 
 @keyframes aurora {
@@ -119,12 +130,13 @@ body {
   filter: blur(100px);
   opacity: 0.5;
   will-change: transform;
+  z-index: 0;
 }
 
 .orb-1 {
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(201, 169, 89, 0.2) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
   top: 5%;
   left: 5%;
   animation: floatOrb1 30s ease-in-out infinite;
@@ -133,7 +145,7 @@ body {
 .orb-2 {
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
   top: 50%;
   right: 5%;
   animation: floatOrb2 35s ease-in-out infinite;
@@ -142,7 +154,7 @@ body {
 .orb-3 {
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(232, 200, 100, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
   bottom: 10%;
   left: 25%;
   animation: floatOrb3 25s ease-in-out infinite;
@@ -151,7 +163,7 @@ body {
 .orb-4 {
   width: 350px;
   height: 350px;
-  background: radial-gradient(circle, rgba(201, 169, 89, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
   top: 30%;
   left: 50%;
   animation: floatOrb4 28s ease-in-out infinite;
@@ -160,7 +172,7 @@ body {
 .orb-5 {
   width: 450px;
   height: 450px;
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
   bottom: 30%;
   right: 20%;
   animation: floatOrb5 32s ease-in-out infinite;
@@ -252,13 +264,14 @@ body {
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(201, 169, 89, 0.03) 20%,
-    rgba(201, 169, 89, 0.08) 50%,
-    rgba(201, 169, 89, 0.03) 80%,
+    rgba(59, 130, 246, 0.03) 20%,
+    rgba(99, 102, 241, 0.08) 50%,
+    rgba(59, 130, 246, 0.03) 80%,
     transparent 100%
   );
   opacity: 0;
   transform: rotate(15deg);
+  z-index: 0;
 }
 
 .light-beam-1 {
@@ -305,6 +318,7 @@ body {
   height: 60%;
   overflow: hidden;
   opacity: 0.4;
+  z-index: 0;
 }
 
 .wave {
@@ -314,7 +328,7 @@ body {
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(201, 169, 89, 0.02) 50%,
+    rgba(59, 130, 246, 0.02) 50%,
     transparent 100%
   );
   border-radius: 50% 50% 0 0;
@@ -361,9 +375,10 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border: 1px solid rgba(201, 169, 89, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.1);
   border-radius: 50%;
   opacity: 0;
+  z-index: 0;
 }
 
 .pulse-ring-1 {
@@ -404,13 +419,14 @@ body {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  z-index: 0;
 }
 
 .dust {
   position: absolute;
   width: 3px;
   height: 3px;
-  background: rgba(201, 169, 89, 0.4);
+  background: rgba(99, 102, 241, 0.4);
   border-radius: 50%;
   filter: blur(1px);
 }
@@ -438,8 +454,8 @@ body {
   inset: 0;
   z-index: -1;
   background-image:
-    linear-gradient(rgba(201, 169, 89, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(201, 169, 89, 0.025) 1px, transparent 1px);
+    linear-gradient(rgba(99, 102, 241, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.025) 1px, transparent 1px);
   background-size: 80px 80px;
   mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 30%, transparent 100%);
   animation: gridBreath 10s ease-in-out infinite;
@@ -532,9 +548,10 @@ body {
   position: absolute;
   width: 100px;
   height: 1px;
-  background: linear-gradient(90deg, rgba(201, 169, 89, 0.8), transparent);
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.8), transparent);
   opacity: 0;
   transform: rotate(-45deg);
+  z-index: 0;
 }
 
 @keyframes shootingStar {
@@ -626,7 +643,7 @@ body {
   }
 
   .bg-glass-gold {
-    background: rgba(201, 169, 89, 0.08);
+    background: rgba(59, 130, 246, 0.08);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
@@ -650,8 +667,9 @@ body {
   overflow: hidden;
   transition: all 0.4s var(--ease-smooth);
   box-shadow:
-    0 4px 20px rgba(201, 169, 89, 0.25),
-    0 0 0 1px rgba(201, 169, 89, 0.1);
+    0 4px 20px rgba(99, 102, 241, 0.25),
+    0 0 0 1px rgba(99, 102, 241, 0.1);
+  isolation: isolate;
 }
 
 .btn-primary::before {
@@ -661,13 +679,14 @@ body {
   background: linear-gradient(135deg, var(--color-gold-light) 0%, var(--color-gold) 100%);
   opacity: 0;
   transition: opacity 0.4s var(--ease-smooth);
+  z-index: -1;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 8px 30px rgba(201, 169, 89, 0.35),
-    0 0 0 1px rgba(201, 169, 89, 0.2);
+    0 8px 30px rgba(99, 102, 241, 0.35),
+    0 0 0 1px rgba(99, 102, 241, 0.2);
 }
 
 .btn-primary:hover::before {
@@ -688,6 +707,7 @@ body {
   border-radius: 0.5rem;
   border: 1px solid var(--color-champagne);
   transition: all 0.4s var(--ease-smooth);
+  isolation: isolate;
 }
 
 .btn-secondary::before {
@@ -698,6 +718,7 @@ body {
   opacity: 0;
   transition: opacity 0.4s var(--ease-smooth);
   border-radius: 0.5rem;
+  z-index: -1;
 }
 
 .btn-secondary:hover {
@@ -716,24 +737,25 @@ body {
 
 /* Card Styles */
 .card {
+  position: relative;
   background: rgba(20, 20, 22, 0.5);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(201, 169, 89, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.1);
   border-radius: 1rem;
   transition: all 0.5s var(--ease-smooth);
 }
 
 .card:hover {
-  border-color: rgba(201, 169, 89, 0.3);
+  border-color: rgba(99, 102, 241, 0.3);
   transform: translateY(-4px);
   box-shadow:
     0 20px 40px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(201, 169, 89, 0.1);
+    0 0 0 1px rgba(99, 102, 241, 0.1);
 }
 
 .card-highlight {
-  background: linear-gradient(135deg, rgba(201, 169, 89, 0.1) 0%, rgba(201, 169, 89, 0.02) 100%);
-  border: 1px solid rgba(201, 169, 89, 0.3);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.02) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
 /* Animation Classes */
@@ -804,27 +826,27 @@ body {
 /* Glow effects */
 .glow-gold {
   box-shadow:
-    0 0 20px rgba(201, 169, 89, 0.15),
-    0 0 40px rgba(201, 169, 89, 0.1),
-    0 0 60px rgba(201, 169, 89, 0.05);
+    0 0 20px rgba(99, 102, 241, 0.15),
+    0 0 40px rgba(99, 102, 241, 0.1),
+    0 0 60px rgba(99, 102, 241, 0.05);
 }
 
 .glow-gold-intense {
   box-shadow:
-    0 0 30px rgba(201, 169, 89, 0.25),
-    0 0 60px rgba(201, 169, 89, 0.15),
-    0 0 90px rgba(201, 169, 89, 0.1);
+    0 0 30px rgba(99, 102, 241, 0.25),
+    0 0 60px rgba(99, 102, 241, 0.15),
+    0 0 90px rgba(99, 102, 241, 0.1);
 }
 
 /* Icon styling */
 .icon-gold {
   color: var(--color-champagne);
-  filter: drop-shadow(0 0 8px rgba(201, 169, 89, 0.3));
+  filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));
 }
 
 /* Selection */
 ::selection {
-  background: rgba(201, 169, 89, 0.3);
+  background: rgba(99, 102, 241, 0.3);
   color: var(--color-ivory);
 }
 
@@ -850,18 +872,414 @@ body {
 @media (max-width: 768px) {
   .orb {
     filter: blur(60px);
-    opacity: 0.3;
+    opacity: 0.25;
   }
 
-  .orb-1 { width: 300px; height: 300px; }
-  .orb-2 { width: 250px; height: 250px; }
-  .orb-3 { width: 200px; height: 200px; }
+  /* Cap orb sizes well within mobile viewport to prevent overflow.
+     Even though .animated-bg has overflow:hidden, smaller sizes reduce
+     any risk from the JS parallax transform pushing them outside. */
+  .orb-1 { width: 260px; height: 260px; }
+  .orb-2 { width: 220px; height: 220px; }
+  .orb-3 { width: 180px; height: 180px; }
   .orb-4, .orb-5 { display: none; }
+
+  /* Reduce blob sizes on mobile so they stay well inside animated-bg */
+  .blob-1 { width: 260px; height: 260px; }
+  .blob-2 { width: 220px; height: 220px; }
+  .blob-3 { display: none; }
 
   .light-beam { display: none; }
   .wave-container { opacity: 0.2; }
   .pulse-ring { display: none; }
   .shooting-star { display: none; }
+}
+
+/* ===== ARMONI-STYLE ANIMATIONS ===== */
+
+/* Blob Morphing - organic shape breathing */
+@keyframes blob-morph-a {
+  0%, 100% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
+  25% { border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%; }
+  50% { border-radius: 50% 60% 30% 60% / 50% 40% 70% 50%; }
+  75% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+}
+
+@keyframes blob-morph-b {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  33% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  66% { border-radius: 50% 40% 60% 40% / 40% 70% 30% 60%; }
+}
+
+.blob {
+  position: absolute;
+  filter: blur(40px);
+  will-change: border-radius, transform;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+.blob-1 {
+  width: 500px;
+  height: 500px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.08));
+  top: 10%;
+  left: -5%;
+  animation: blob-morph-a 18s ease-in-out infinite;
+}
+
+.blob-2 {
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(59, 130, 246, 0.06));
+  bottom: 15%;
+  right: -5%;
+  animation: blob-morph-b 22s ease-in-out 0.5s infinite;
+}
+
+.blob-3 {
+  width: 350px;
+  height: 350px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(6, 182, 212, 0.05));
+  top: 50%;
+  left: 40%;
+  animation: blob-morph-a 20s ease-in-out 1s infinite;
+}
+
+/* Card Float - perpetual vertical hover */
+@keyframes card-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-card-float {
+  animation: card-float 4s ease-in-out infinite;
+}
+
+/* Icon Glow Pulse */
+@keyframes icon-glow {
+  0%, 100% { filter: drop-shadow(0 0 0px rgba(99, 102, 241, 0)); }
+  50% { filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.4)); }
+}
+
+.animate-icon-glow {
+  animation: icon-glow 3s ease-in-out infinite;
+}
+
+/* Text Shimmer - gradient sweep */
+.text-shimmer {
+  background: linear-gradient(90deg, #3b82f6 0%, #06b6d4 25%, #8b5cf6 50%, #06b6d4 75%, #3b82f6 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: text-shimmer 4s linear infinite;
+}
+
+@keyframes text-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Card Glow Pulse */
+@keyframes card-glow-pulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(99, 102, 241, 0); }
+  50% { box-shadow: 0 4px 24px rgba(99, 102, 241, 0.15); }
+}
+
+.animate-card-glow {
+  animation: card-glow-pulse 4s ease-in-out infinite;
+}
+
+/* Border Pulse */
+@keyframes border-pulse {
+  0%, 100% {
+    border-color: rgba(99, 102, 241, 0.1);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    border-color: rgba(99, 102, 241, 0.25);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.1);
+  }
+}
+
+.animate-border-pulse {
+  animation: border-pulse 3s ease-in-out infinite;
+}
+
+/* Number Reveal - for stat counters */
+@keyframes number-reveal {
+  0% { opacity: 0; transform: translateY(10px) scale(0.94); }
+  60% { transform: translateY(-2px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-number-reveal {
+  animation: number-reveal 0.55s ease-out forwards;
+}
+
+/* Progress Bar Fill */
+@keyframes bar-fill {
+  from { width: 0%; }
+  to { width: var(--bar-w, 100%); }
+}
+
+.animate-bar-fill {
+  animation: bar-fill 0.9s ease-out forwards;
+}
+
+/* Dot Pop - for bullet points */
+@keyframes dot-pop {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-dot-pop {
+  animation: dot-pop 0.4s ease-out forwards;
+}
+
+/* Section heading reveal */
+@keyframes heading-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+}
+
+.animate-heading-reveal {
+  animation: heading-reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ===== PACIFIKAI-STYLE ANIMATIONS ===== */
+
+/* CTA Pulse Glow - breathing glow on primary buttons */
+@keyframes cta-pulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25), 0 0 0 0 rgba(99, 102, 241, 0); }
+  50% { box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4), 0 0 25px 5px rgba(99, 102, 241, 0.15); }
+}
+
+.animate-cta-pulse {
+  animation: cta-pulse 2.5s ease-in-out infinite;
+}
+
+/* Card 3D Tilt hover effect */
+/*
+ * card-tilt: 3D hover transform. We intentionally do NOT use preserve-3d here
+ * to avoid creating a stacking context that could place pseudo-elements above
+ * card content. The visual tilt is achieved with rotateX/rotateY on the element
+ * itself, which is sufficient and keeps the normal stacking order intact.
+ */
+.card-tilt {
+  transition: transform 0.5s var(--ease-smooth), box-shadow 0.5s var(--ease-smooth);
+}
+
+.card-tilt:hover {
+  transform: translateY(-8px) rotateX(2deg) rotateY(-2deg);
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(99, 102, 241, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Card glow border sweep on hover */
+@keyframes border-glow-sweep {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.card-glow-border {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/*
+ * ::before renders the animated sweeping border gradient.
+ * z-index: -1 keeps it behind all card content.
+ * isolation: isolate on the parent ensures z-index is scoped to the card.
+ */
+.card-glow-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(99, 102, 241, 0.4) 25%,
+    rgba(139, 92, 246, 0.6) 50%,
+    rgba(99, 102, 241, 0.4) 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.card-glow-border:hover::before {
+  opacity: 1;
+  animation: border-glow-sweep 3s linear infinite;
+}
+
+/* Counter punch - overshoot bounce on stats */
+@keyframes counter-punch {
+  0% { transform: scale(0.5) translateY(20px); opacity: 0; }
+  60% { transform: scale(1.15) translateY(-5px); opacity: 1; }
+  80% { transform: scale(0.95) translateY(2px); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.animate-counter-punch {
+  animation: counter-punch 0.7s var(--ease-bounce) forwards;
+  opacity: 0;
+}
+
+/* Section heading reveal with blur */
+@keyframes section-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+    filter: blur(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+}
+
+.animate-section-reveal {
+  animation: section-reveal 0.9s var(--ease-smooth) forwards;
+  opacity: 0;
+}
+
+/* Pain point slide-in from left.
+ * Reduced translateX from -60px to -30px and removed scale change
+ * to minimize the chance of any pixel escaping the parent clip context
+ * during animation on narrow mobile viewports. */
+@keyframes slide-in-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.6s var(--ease-smooth) forwards;
+  opacity: 0;
+}
+
+/* Testimonial card float on hover */
+.testimonial-hover {
+  transition: all 0.5s var(--ease-smooth);
+}
+
+.testimonial-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.4),
+    0 0 40px rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+/* Icon spin-in on reveal */
+@keyframes icon-spin-in {
+  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+  70% { transform: scale(1.1) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.animate-icon-spin-in {
+  animation: icon-spin-in 0.6s var(--ease-bounce) forwards;
+  opacity: 0;
+}
+
+/* Gradient text glow pulse */
+@keyframes text-glow-pulse {
+  0%, 100% { text-shadow: none; }
+  50% { text-shadow: 0 0 20px rgba(99, 102, 241, 0.4), 0 0 40px rgba(99, 102, 241, 0.2); }
+}
+
+.animate-text-glow {
+  animation: text-glow-pulse 3s ease-in-out infinite;
+}
+
+/* Parallax scroll for orbs */
+.orb-parallax {
+  will-change: transform;
+  transition: transform 0.1s linear;
+}
+
+/* FAQ accordion bounce */
+@keyframes faq-open {
+  0% { opacity: 0; transform: translateY(-10px); }
+  60% { transform: translateY(3px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-faq-open {
+  animation: faq-open 0.4s var(--ease-smooth) forwards;
+}
+
+/* Guarantee shield pulse */
+@keyframes shield-pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(99, 102, 241, 0)); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.5)); }
+}
+
+.animate-shield-pulse {
+  animation: shield-pulse 3s ease-in-out infinite;
+}
+
+/* Pricing card spotlight effect */
+/*
+ * ::after renders the radial gradient spotlight that follows the mouse.
+ * z-index: -1 keeps it behind all text/content inside the pricing card.
+ * isolation: isolate on the parent scopes the stacking context.
+ */
+.pricing-spotlight {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.pricing-spotlight::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(99, 102, 241, 0.08) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.pricing-spotlight:hover::after {
+  opacity: 1;
 }
 
 /* Reduce motion for accessibility */
