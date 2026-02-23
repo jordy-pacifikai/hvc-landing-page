@@ -24,6 +24,9 @@ import {
   Mail
 } from 'lucide-react'
 import ChatWidget from './components/ChatWidget'
+import { trackEvent } from './lib/posthog'
+import { trackNewsletterSignup, trackCheckoutInitiated } from './lib/analytics'
+import { captureUTM, getStoredUTM } from './lib/utm'
 
 // URLs
 const URLS = {
@@ -382,7 +385,11 @@ function Hero() {
 
         {/* CTAs */}
         <div className="animate-fade-up delay-400 opacity-0 flex flex-col sm:flex-row gap-5 justify-center mb-16">
-          <a href={URLS.premium} className="btn-primary text-base sm:text-lg group animate-cta-pulse">
+          <a
+            href={URLS.premium}
+            className="btn-primary text-base sm:text-lg group animate-cta-pulse"
+            onClick={() => { trackEvent('cta_clicked', { location: 'hero' }); trackCheckoutInitiated() }}
+          >
             <span className="flex items-center justify-center gap-2">
               Rejoindre la Formation
               <span className="text-void font-bold">— 49€/mois</span>
@@ -761,7 +768,11 @@ function Pricing() {
               ))}
             </ul>
 
-            <a href={URLS.premium} className="btn-primary w-full text-center block text-base sm:text-lg animate-cta-pulse">
+            <a
+              href={URLS.premium}
+              className="btn-primary w-full text-center block text-base sm:text-lg animate-cta-pulse"
+              onClick={() => { trackEvent('cta_clicked', { location: 'pricing' }); trackCheckoutInitiated() }}
+            >
               <span className="flex items-center justify-center gap-2">
                 Rejoindre HVC
                 <ArrowRight className="w-5 h-5" />
@@ -896,7 +907,11 @@ function FinalCTA() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-5 justify-center">
-            <a href={URLS.premium} className="btn-primary text-base sm:text-lg group animate-cta-pulse">
+            <a
+              href={URLS.premium}
+              className="btn-primary text-base sm:text-lg group animate-cta-pulse"
+              onClick={() => { trackEvent('cta_clicked', { location: 'footer' }); trackCheckoutInitiated() }}
+            >
               <span className="flex items-center justify-center gap-2">
                 Rejoindre HVC - 49€/mois
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -923,16 +938,19 @@ function Newsletter() {
     setErrorMessage('')
 
     try {
+      const utm = getStoredUTM()
       const res = await fetch('/api/newsletter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email }),
+        body: JSON.stringify({ name, email, ...utm }),
       })
 
       const data = await res.json()
 
       if (data.success) {
         setStatus('success')
+        trackEvent('newsletter_signup', { source: 'landing_page' })
+        trackNewsletterSignup()
       } else {
         setStatus('error')
         setErrorMessage(data.error || 'Une erreur est survenue. Réessaie.')
@@ -968,11 +986,11 @@ function Newsletter() {
           {/* Heading */}
           <div className="text-center mb-10">
             <h2 className={`font-display text-2xl sm:text-3xl md:text-4xl font-medium mb-4 text-ivory ${revealed ? 'animate-section-reveal' : 'opacity-0'}`}>
-              Reçois des analyses trading{' '}
-              <span className="italic text-gradient-gold">gratuites</span>
+              Progresse chaque semaine{' '}
+              <span className="italic text-gradient-gold">en trading</span>
             </h2>
             <p className={`text-mist text-base sm:text-lg leading-relaxed ${revealed ? 'animate-section-reveal' : 'opacity-0'}`} style={{ animationDelay: '0.1s' }}>
-              Rejoins 1000+ traders et reçois chaque semaine nos meilleures analyses, setups et conseils.
+              Rejoins 1000+ traders et reçois chaque semaine nos meilleurs conseils, etudes de marche et astuces pour devenir Funded Trader.
             </p>
           </div>
 
@@ -986,7 +1004,7 @@ function Newsletter() {
                 Inscription confirmee ! Check tes emails.
               </p>
               <p className="text-mist text-sm text-center">
-                Tu recevras ta premiere analyse des cette semaine.
+                Tu recevras ton premier email educatif des cette semaine.
               </p>
             </div>
           ) : (
@@ -1054,7 +1072,7 @@ function Newsletter() {
                     </>
                   ) : (
                     <>
-                      Je veux les analyses gratuites
+                      Recevoir les conseils gratuits
                       <ArrowRight className="w-5 h-5" />
                     </>
                   )}
@@ -1107,6 +1125,10 @@ function Footer() {
 
 // Page principale
 export default function Home() {
+  useEffect(() => {
+    captureUTM()
+  }, [])
+
   return (
     /* overflow-x-hidden on main is the primary guard against horizontal scroll.
        Combined with html/body overflow-x:hidden in globals.css, this gives

@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react'
+import { trackEvent } from '../lib/posthog'
+import { trackChatOpened, trackLeadCaptured } from '../lib/analytics'
+import { getStoredUTM } from '../lib/utm'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -27,7 +30,7 @@ const WELCOME_MESSAGE: Message = {
   timestamp: Date.now(),
 }
 
-const LEAD_CAPTURE_THRESHOLD = 3
+const LEAD_CAPTURE_THRESHOLD = 0 // Show form immediately on chat open
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
@@ -112,39 +115,44 @@ function LeadForm({ onSubmit }: LeadFormProps) {
   return (
     <div
       style={{
-        background: 'rgba(99,102,241,0.08)',
-        border: '1px solid rgba(99,102,241,0.25)',
-        borderRadius: 12,
-        padding: '14px 16px',
+        alignSelf: 'flex-start',
+        maxWidth: '90%',
+        background: 'rgba(30,30,36,0.95)',
+        border: '1px solid rgba(99,102,241,0.2)',
+        borderRadius: 14,
+        padding: 14,
         marginBottom: 12,
+        animation: 'hvc-slide-up 0.3s ease',
       }}
     >
       <p
         style={{
           color: '#f0f0f5',
           fontSize: 13,
-          marginBottom: 10,
+          marginBottom: 12,
           lineHeight: 1.5,
         }}
       >
-        Pour continuer et recevoir nos ressources gratuites, dis-moi qui tu es.
+        Avant de commencer, dis-moi comment te joindre :
       </p>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <input
           type="text"
-          placeholder="Ton prénom"
+          placeholder="Ton prenom"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          autoComplete="given-name"
           required
           style={{
+            width: '100%',
+            padding: '9px 12px',
             background: 'rgba(8,9,13,0.8)',
-            border: '1px solid rgba(99,102,241,0.2)',
+            border: '1px solid rgba(99,102,241,0.18)',
             borderRadius: 8,
-            padding: '8px 12px',
             color: '#f0f0f5',
             fontSize: 13,
             outline: 'none',
-            width: '100%',
+            boxSizing: 'border-box',
           }}
         />
         <input
@@ -152,34 +160,36 @@ function LeadForm({ onSubmit }: LeadFormProps) {
           placeholder="Ton email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
           required
           style={{
+            width: '100%',
+            padding: '9px 12px',
             background: 'rgba(8,9,13,0.8)',
-            border: '1px solid rgba(99,102,241,0.2)',
+            border: '1px solid rgba(99,102,241,0.18)',
             borderRadius: 8,
-            padding: '8px 12px',
             color: '#f0f0f5',
             fontSize: 13,
             outline: 'none',
-            width: '100%',
+            boxSizing: 'border-box',
           }}
         />
         <button
           type="submit"
           style={{
+            width: '100%',
+            padding: '9px',
             background: 'rgba(99,102,241,0.85)',
             border: 'none',
             borderRadius: 8,
-            padding: '9px 14px',
-            color: '#f0f0f5',
+            color: '#fff',
             fontSize: 13,
             fontWeight: 600,
             cursor: 'pointer',
-            letterSpacing: '0.02em',
             transition: 'background 0.2s',
           }}
         >
-          Continuer la conversation
+          C&apos;est parti !
         </button>
       </form>
     </div>
@@ -257,7 +267,13 @@ export default function ChatWidget() {
   const [sessionId] = useState<string>(() => getOrCreateSessionId())
   const [userMessageCount, setUserMessageCount] = useState(0)
   const [lead, setLead] = useState<LeadData | null>(null)
-  const [showLeadForm, setShowLeadForm] = useState(false)
+  const [showLeadForm, setShowLeadForm] = useState(() => {
+    // Don't show form if lead was already captured in a previous session
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem('hvc_lead_captured')
+    }
+    return true
+  })
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -294,9 +310,11 @@ export default function ChatWidget() {
       setIsTyping(true)
 
       try {
+        const utm = getStoredUTM()
         const body: Record<string, unknown> = {
           message: trimmed,
           sessionId,
+          ...utm,
         }
         // Only send lead data once (when freshly captured)
         if (leadData) {
@@ -336,12 +354,23 @@ export default function ChatWidget() {
     [sessionId, lead]
   )
 
+  function handleToggleOpen() {
+    const opening = !isOpen
+    setIsOpen(opening)
+    if (opening) {
+      trackEvent('chat_opened')
+      trackChatOpened()
+    }
+  }
+
   function handleSend() {
     const trimmed = input.trim()
     if (!trimmed || isTyping) return
 
     const nextCount = userMessageCount + 1
     setUserMessageCount(nextCount)
+
+    trackEvent('chat_message_sent')
 
     // Show lead form after threshold if not yet captured
     if (nextCount >= LEAD_CAPTURE_THRESHOLD && !lead && !showLeadForm) {
@@ -365,10 +394,16 @@ export default function ChatWidget() {
   function handleLeadSubmit(leadData: LeadData) {
     setLead(leadData)
     setShowLeadForm(false)
+    localStorage.setItem('hvc_lead_captured', 'true')
+    trackEvent('lead_captured', { source: 'chat_widget' })
+    trackLeadCaptured('chat_widget')
     if (pendingMessage) {
       // User bubble was already added in handleSend — skip adding it again
       sendMessage(pendingMessage, leadData, true)
       setPendingMessage(null)
+    } else {
+      // Send an initial greeting with lead data so the backend captures it
+      sendMessage('Bonjour !', leadData)
     }
   }
 
@@ -399,7 +434,7 @@ export default function ChatWidget() {
 
       {/* Floating Button */}
       <button
-        onClick={() => setIsOpen((v) => !v)}
+        onClick={handleToggleOpen}
         aria-label="Ouvrir le chat HVC"
         style={{
           position: 'fixed',

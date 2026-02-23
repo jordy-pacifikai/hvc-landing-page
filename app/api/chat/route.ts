@@ -31,7 +31,7 @@ Objectif : comprendre ou en est le prospect.
   - "Qu'est-ce qui t'a amene a t'interesser au trading ?"
 - Adapte ensuite TOUT ton discours au profil :
   - DEBUTANT → insiste sur l'accompagnement, la methode pas a pas, la communaute
-  - INTERMEDIAIRE → insiste sur les resultats des membres, la methode ARD, le scanner
+  - INTERMEDIAIRE → insiste sur les resultats des membres, la methode ARD, les resultats prouves
   - EXPERIMENTE → insiste sur les propfirm, les payouts, l'optimisation
 
 ### Phase 2 — DIAGNOSE & REFRAME (messages 3-4)
@@ -50,7 +50,7 @@ Objectif : prouver que HVC est LA solution avec du social proof contextualise.
 - Adapte les preuves au profil du prospect :
   - DEBUTANT : "On a des membres qui sont partis de zero et qui sont devenus Funded en 3-4 mois"
   - INTERMEDIAIRE : "La methode ARD a aide 15+ de nos membres a passer leurs challenges propfirm"
-  - EXPERIMENTE : "85,000$+ de payouts documentes par nos membres. Le scanner detecte les setups en temps reel sur 17 paires"
+  - EXPERIMENTE : "85,000$+ de payouts documentes par nos membres. La methode ARD permet d'identifier les setups avec precision"
 - Utilise des micro-commitments pour engager :
   - "Ca t'interesserait de voir comment la methode ARD fonctionne concretement ?"
   - "Tu veux que je t'explique comment nos membres passent leurs challenges ?"
@@ -61,7 +61,7 @@ Objectif : CTA sans pression.
 - Formulations douces :
   - "Si tu veux tester, c'est 49EUR/mois avec 7 jours satisfait ou rembourse. Zero risque. Tu peux t'inscrire ici : /checkout"
   - "Le mieux c'est de voir par toi-meme — inscris-toi sur /checkout et tu as acces a tout direct"
-  - "Pour 49EUR t'as acces a la formation complete + la communaute Discord + le scanner. C'est moins cher qu'un resto et ca peut changer ta vie financierement"
+  - "Pour 49EUR t'as acces a la formation complete + la communaute Discord + les sessions live. C'est moins cher qu'un resto et ca peut changer ta vie financierement"
 
 ## GESTION DES OBJECTIONS
 
@@ -75,10 +75,10 @@ Objectif : CTA sans pression.
 
 ### "Je peux apprendre seul sur YouTube"
 - "95% des traders retail perdent de l'argent. Tu sais pourquoi ? Parce qu'ils apprennent avec des infos contradictoires sur YouTube. Avoir un mentor et une methode prouvee, c'est ce qui fait la difference entre les 5% gagnants et le reste"
-- "YouTube te donne des bases. HVC te donne une methode complete, un mentor, un scanner pro, et une communaute. C'est pas la meme chose"
+- "YouTube te donne des bases. HVC te donne une methode complete, un mentor, des sessions live, et une communaute. C'est pas la meme chose"
 
 ### "J'ai pas le temps"
-- "La methode est structuree — tu peux trader 1-2h par jour et suivre les setups du scanner. Pas besoin d'etre colle a l'ecran 8h. Plusieurs de nos membres funded traders ont un job a cote"
+- "La methode est structuree — tu peux trader 1-2h par jour en suivant la methode ARD. Pas besoin d'etre colle a l'ecran 8h. Plusieurs de nos membres funded traders ont un job a cote"
 
 ### "Je vais y reflechir"
 - "Bien sur, prends ton temps ! Mais sache que chaque jour ou tu trades sans methode, c'est potentiellement de l'argent perdu. La garantie 7 jours te protege — tu testes, et si c'est pas pour toi, tu es rembourse"
@@ -105,17 +105,10 @@ Objectif : CTA sans pression.
 
 ### Le Discord HVC
 - **Channels gratuits** (accessibles a tous) : #bienvenue, #regles, #apercu-resultats, #profit (screenshots de gains), #certificat-propfirm (preuves de funded), #payout-propfirm (preuves de payouts), #calendrier-economique, #annonces
-- **Channels membres** (avec abonnement) : #general, #analyses, #propfirm, #questions, #ressources, les 3 formations completes, #signaux-live (signaux du scanner en temps reel), #copy-trading-info, #guide-startrader, #analyse-fondamentale quotidienne
+- **Channels membres** (avec abonnement) : #general, #analyses, #propfirm, #questions, #ressources, les 3 formations completes, #analyse-fondamentale quotidienne
 - **Sessions live** : voice channel #qa-live pour Q&A en direct
 - **Progression** : roles Debutant → Trader → Elite (automatiques selon ta progression)
 - **Invite gratuite** : on peut rejoindre le Discord gratuitement pour voir les channels publics (resultats, temoignages, apercu)
-
-### Le Scanner ARMONI TRADING.AI
-- Scanner automatise cree par Jordy qui detecte les setups en temps reel
-- 17 instruments : EURUSD, GBPUSD, USDJPY, AUDUSD, NZDUSD, EURGBP, EURJPY, GBPJPY, AUDJPY, CHFJPY, XAUUSD, USDCAD, USDCHF, EURAUD, GBPAUD, CADJPY, BTCUSDT
-- ~62% de win rate sur 2 ans de donnees backtestees (3,165 trades)
-- 1 a 3 signaux par jour avec entree, stop-loss, take-profit et ratio risque/rendement
-- Les signaux arrivent dans #signaux-live sur Discord (membres uniquement)
 
 ### Resultats Documentes (vrais membres)
 - 15+ membres devenus Funded Traders
@@ -132,8 +125,7 @@ Objectif : CTA sans pression.
 ### Le Fondateur — Jordy Banks
 - Trader professionnel depuis 6 ans, base en Polynesie Francaise (Tahiti)
 - Specialiste du Forex et des propfirm
-- A cree la methode ARD et le scanner ARMONI TRADING.AI
-- Gere aussi un PAMM (copy trading) avec StarTrader pour ceux qui veulent investir passivement
+- A cree la methode ARD, une approche proprietaire basee sur les concepts institutionnels
 
 ### Propfirm — Comment ca marche
 - Les propfirm (Alpha Capital, APEX, BlueberryFunded, FTMO, etc.) financent des traders qui prouvent leurs competences
@@ -142,12 +134,6 @@ Objectif : CTA sans pression.
 - Une fois funded : le trader garde 70-90% des profits
 - HVC prepare SPECIFIQUEMENT a reussir ces challenges : gestion du daily loss, drawdown max, regles de consistance
 - Le Discord a un channel #propfirm dedie ou les membres partagent leurs resultats
-
-### Copy Trading (PAMM)
-- Pour ceux qui n'ont pas le temps de trader eux-memes
-- Jordy gere un compte PAMM via StarTrader (broker ASIC regulated)
-- Profit split 50/50 : Jordy trade, tu touches 50% des gains
-- Pas besoin de savoir trader — ton argent est gere par un pro
 
 ### Prix et Inscription
 - 49 EUR/mois, sans engagement, resiliable a tout moment
@@ -202,11 +188,21 @@ function isRateLimited(ip: string): boolean {
 
 // ─── Supabase lead capture ───────────────────────────────────────────────────
 
+interface UTMData {
+  utm_source?: string
+  utm_medium?: string
+  utm_campaign?: string
+  utm_content?: string
+  utm_term?: string
+  referrer?: string
+}
+
 async function saveLeadToSupabase(
   name: string,
   email: string,
   sessionId: string,
-  ip: string
+  ip: string,
+  utm?: UTMData
 ): Promise<void> {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) return
   try {
@@ -218,7 +214,18 @@ async function saveLeadToSupabase(
         Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
         Prefer: 'resolution=merge-duplicates',
       },
-      body: JSON.stringify({ name, email, session_id: sessionId, ip_address: ip }),
+      body: JSON.stringify({
+        name,
+        email,
+        session_id: sessionId,
+        ip_address: ip,
+        utm_source: utm?.utm_source || null,
+        utm_medium: utm?.utm_medium || null,
+        utm_campaign: utm?.utm_campaign || null,
+        utm_content: utm?.utm_content || null,
+        utm_term: utm?.utm_term || null,
+        referrer: utm?.referrer || null,
+      }),
       signal: AbortSignal.timeout(8_000),
     })
   } catch {
@@ -257,6 +264,12 @@ export async function POST(req: NextRequest) {
     sessionId?: string
     name?: string
     email?: string
+    utm_source?: string
+    utm_medium?: string
+    utm_campaign?: string
+    utm_content?: string
+    utm_term?: string
+    referrer?: string
   }
 
   try {
@@ -268,7 +281,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const { message, sessionId, name, email } = body
+  const { message, sessionId, name, email, utm_source, utm_medium, utm_campaign, utm_content, utm_term, referrer } = body
 
   if (!message || typeof message !== 'string' || !message.trim()) {
     return NextResponse.json(
@@ -297,7 +310,14 @@ export async function POST(req: NextRequest) {
   // Fire-and-forget lead capture (only when fresh lead data is present)
   if (name && email) {
     addBrevoContact(name, email)
-    saveLeadToSupabase(name, email, sid, clientIp)
+    saveLeadToSupabase(name, email, sid, clientIp, {
+      utm_source,
+      utm_medium,
+      utm_campaign,
+      utm_content,
+      utm_term,
+      referrer,
+    })
   }
 
   // Get or create session history
