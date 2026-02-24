@@ -13,7 +13,10 @@ import { useMarkChannelRead } from '@/app/lib/community-hooks'
 
 export default function ChannelPage({ params }: { params: Promise<{ channelSlug: string }> }) {
   const { channelSlug } = use(params)
-  const { channels, setActiveChannel, activeThread, setActiveThread } = useCommunityStore()
+  const channels = useCommunityStore((s) => s.channels)
+  const setActiveChannel = useCommunityStore((s) => s.setActiveChannel)
+  const activeThread = useCommunityStore((s) => s.activeThread)
+  const setActiveThread = useCommunityStore((s) => s.setActiveThread)
   const { data: session } = useSession()
   const channel = channels.find((c) => c.slug === channelSlug)
   const { mutate: markRead } = useMarkChannelRead()

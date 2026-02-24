@@ -11,9 +11,12 @@ import SearchModal from '@/app/components/community/SearchModal'
 
 export default function CommunityLayoutClient({ children }: { children: React.ReactNode }) {
   const { data: session, isLoading: sessionLoading } = useSession()
-  const { sidebarOpen, membersSidebarOpen, setSearchOpen, searchOpen } = useCommunityStore()
+  const sidebarOpen = useCommunityStore((s) => s.sidebarOpen)
+  const membersSidebarOpen = useCommunityStore((s) => s.membersSidebarOpen)
+  const searchOpen = useCommunityStore((s) => s.searchOpen)
+  const setSearchOpen = useCommunityStore((s) => s.setSearchOpen)
+  const setChannels = useCommunityStore((s) => s.setChannels)
   const { data: channels } = useChannels()
-  const { setChannels } = useCommunityStore()
 
   // Register service worker
   useEffect(() => {

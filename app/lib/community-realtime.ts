@@ -57,7 +57,8 @@ export function useCommunityRealtime(channelId: string | null) {
 export function useTypingBroadcast(channelId: string | null) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channelRef = useRef<any>(null)
-  const { addTypingUser, removeTypingUser } = useCommunityStore()
+  const addTypingUser = useCommunityStore((s) => s.addTypingUser)
+  const removeTypingUser = useCommunityStore((s) => s.removeTypingUser)
 
   useEffect(() => {
     if (!channelId || !supabase) return
@@ -103,7 +104,7 @@ export function useTypingBroadcast(channelId: string | null) {
 }
 
 export function usePresence() {
-  const { setOnlineUsers } = useCommunityStore()
+  const setOnlineUsers = useCommunityStore((s) => s.setOnlineUsers)
 
   useEffect(() => {
     if (!supabase) return
@@ -113,11 +114,11 @@ export function usePresence() {
     channel
       .on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState()
-        const users = new Set<string>()
+        const users: string[] = []
         Object.values(state).forEach((presences) => {
           presences.forEach((p: Record<string, unknown>) => {
             if (typeof p.userId === 'string') {
-              users.add(p.userId)
+              users.push(p.userId)
             }
           })
         })

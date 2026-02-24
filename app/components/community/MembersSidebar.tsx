@@ -42,9 +42,9 @@ function OnlineDot() {
 
 export default function MembersSidebar() {
   const onlineUsers = useCommunityStore((s) => s.onlineUsers)
-  const onlineCount = onlineUsers.size
+  const onlineCount = onlineUsers.length
 
-  // onlineUsers is a Set<string> of userIds — we show count only for this first version.
+  // onlineUsers is a string[] of userIds — we show count only for this first version.
   // Full member list with avatars arrives with the /api/community/members endpoint.
 
   return (

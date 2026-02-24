@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/app/lib/session'
-import { upsertUser } from '@/app/lib/supabase-server'
+import { upsertUser, getUserByDiscordId } from '@/app/lib/supabase-server'
 import { hasPremiumRole } from '@/app/lib/discord-api'
 
 const DISCORD_CLIENT_ID = '988148432843735073'
@@ -59,10 +59,21 @@ export async function GET(req: NextRequest) {
         : null
 
       const { data: userData } = await upsertUser(user.id, user.username, avatar, isPremium)
-      const supabaseUser = Array.isArray(userData) ? userData[0] : userData
+      let supabaseUser = Array.isArray(userData) ? userData[0] : userData
+
+      // Fallback: if upsert returned nothing, fetch by discord_id
+      if (!supabaseUser?.id) {
+        const { data: existingUser } = await getUserByDiscordId(user.id)
+        supabaseUser = existingUser as { id: string } | null
+      }
+
+      if (!supabaseUser?.id) {
+        console.error('[Discord OAuth] Could not resolve Supabase user ID for discord_id:', user.id)
+        return NextResponse.redirect(new URL(`${getRedirectPath(state)}?error=user_not_found`, req.url))
+      }
 
       const session = await getSession()
-      session.userId = supabaseUser?.id || user.id
+      session.userId = supabaseUser.id
       session.discordId = user.id
       session.discordUsername = user.username
       session.discordAvatar = avatar

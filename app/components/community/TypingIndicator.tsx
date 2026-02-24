@@ -1,9 +1,12 @@
 'use client'
 
 import { useCommunityStore } from '@/app/lib/community-store'
+import type { TypingUser } from '@/app/lib/community-store'
+
+const EMPTY_TYPING: TypingUser[] = []
 
 export default function TypingIndicator({ channelId }: { channelId: string }) {
-  const typingUsers = useCommunityStore((s) => s.typingUsers[channelId] || [])
+  const typingUsers = useCommunityStore((s) => s.typingUsers[channelId] ?? EMPTY_TYPING)
 
   if (typingUsers.length === 0) return null
 

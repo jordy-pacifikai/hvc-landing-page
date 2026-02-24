@@ -256,7 +256,7 @@ function MessageRow({
     minute: '2-digit',
   })
   const [hovered, setHovered] = useState(false)
-  const { setActiveThread } = useCommunityStore()
+  const setActiveThread = useCommunityStore((s) => s.setActiveThread)
 
   const reactions = msg.reactions ?? []
 

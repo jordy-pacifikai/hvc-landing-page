@@ -14,7 +14,7 @@ interface Channel {
   unread_count?: number
 }
 
-interface TypingUser {
+export interface TypingUser {
   userId: string
   username: string
   timestamp: number
@@ -43,9 +43,9 @@ interface CommunityState {
   addTypingUser: (channelId: string, user: TypingUser) => void
   removeTypingUser: (channelId: string, userId: string) => void
 
-  // Online presence
-  onlineUsers: Set<string>
-  setOnlineUsers: (users: Set<string>) => void
+  // Online presence (array instead of Set to avoid Zustand/useSyncExternalStore infinite loop)
+  onlineUsers: string[]
+  setOnlineUsers: (users: string[]) => void
 
   // Thread
   activeThread: string | null // message id
@@ -85,7 +85,7 @@ export const useCommunityStore = create<CommunityState>((set) => ({
       return { typingUsers: { ...s.typingUsers, [channelId]: current.filter((u) => u.userId !== userId) } }
     }),
 
-  onlineUsers: new Set(),
+  onlineUsers: [],
   setOnlineUsers: (users) => set({ onlineUsers: users }),
 
   activeThread: null,

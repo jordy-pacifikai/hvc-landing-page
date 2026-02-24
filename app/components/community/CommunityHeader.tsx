@@ -5,7 +5,11 @@ import { Menu, Users, Search } from 'lucide-react'
 import NotificationBell from './NotificationBell'
 
 export default function CommunityHeader() {
-  const { channels, activeChannelSlug, toggleSidebar, toggleMembersSidebar, setSearchOpen } = useCommunityStore()
+  const channels = useCommunityStore((s) => s.channels)
+  const activeChannelSlug = useCommunityStore((s) => s.activeChannelSlug)
+  const toggleSidebar = useCommunityStore((s) => s.toggleSidebar)
+  const toggleMembersSidebar = useCommunityStore((s) => s.toggleMembersSidebar)
+  const setSearchOpen = useCommunityStore((s) => s.setSearchOpen)
   const channel = channels.find((c) => c.slug === activeChannelSlug)
 
   return (

@@ -21,7 +21,8 @@ export async function POST(
   const channel = channelResult.data as { id: string }
   const result = await upsertChannelRead(session.userId, channel.id)
   if (result.error) {
-    return NextResponse.json({ error: result.error }, { status: 500 })
+    // Non-critical: log but don't crash (e.g. userId not yet a valid UUID)
+    console.warn('[community/read] upsertChannelRead failed (non-fatal):', result.error)
   }
 
   return NextResponse.json({ ok: true })

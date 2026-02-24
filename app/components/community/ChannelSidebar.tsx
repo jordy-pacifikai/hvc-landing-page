@@ -17,7 +17,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 export default function ChannelSidebar() {
-  const { channels } = useCommunityStore()
+  const channels = useCommunityStore((s) => s.channels)
   const { data: session } = useSession()
 
   const grouped = CATEGORY_ORDER.reduce<Record<string, typeof channels>>((acc, cat) => {

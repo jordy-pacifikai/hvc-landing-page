@@ -227,7 +227,9 @@ function SectionHeader({ icon: Icon, label, count }: { icon: React.ElementType; 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function SearchModal() {
-  const { searchOpen, setSearchOpen, channels } = useCommunityStore()
+  const searchOpen = useCommunityStore((s) => s.searchOpen)
+  const setSearchOpen = useCommunityStore((s) => s.setSearchOpen)
+  const channels = useCommunityStore((s) => s.channels)
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
