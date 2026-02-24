@@ -7,6 +7,7 @@ export interface SessionData {
   discordUsername: string
   discordAvatar: string | null
   isPremium: boolean
+  role?: string
 }
 
 const sessionOptions = {

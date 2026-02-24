@@ -57,6 +57,20 @@ export async function getChannelBySlug(slug: string) {
   })
 }
 
+export async function getChannelById(id: string) {
+  return supabaseFetch<{ id: string; is_readonly: boolean; min_role: string }>('hvc_channels?id=eq.' + id + '&select=id,is_readonly,min_role', {
+    method: 'GET',
+    headers: { Accept: 'application/vnd.pgrst.object+json' },
+  })
+}
+
+export async function getMessageById(id: string) {
+  return supabaseFetch<{ id: string; user_id: string; channel_id: string }>('hvc_messages?id=eq.' + id + '&select=id,user_id,channel_id', {
+    method: 'GET',
+    headers: { Accept: 'application/vnd.pgrst.object+json' },
+  })
+}
+
 // --- Messages ---
 
 export async function getMessages(channelId: string, limit = 30, cursor?: string) {

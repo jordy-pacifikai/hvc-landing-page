@@ -4,7 +4,7 @@ import { getChannels, getChannelReads, getLatestMessageTimes } from '@/app/lib/c
 
 export async function GET() {
   const session = await getSession()
-  if (!session.userId) {
+  if (!session.userId || !session.isPremium) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

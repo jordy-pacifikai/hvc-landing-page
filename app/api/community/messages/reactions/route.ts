@@ -4,7 +4,7 @@ import { addReactionDb, removeReactionDb } from '@/app/lib/community-server'
 
 export async function POST(request: NextRequest) {
   const session = await getSession()
-  if (!session.userId) {
+  if (!session.userId || !session.isPremium) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const session = await getSession()
-  if (!session.userId) {
+  if (!session.userId || !session.isPremium) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
       // Fallback: if upsert returned nothing, fetch by discord_id
       if (!supabaseUser?.id) {
         const { data: existingUser } = await getUserByDiscordId(user.id)
-        supabaseUser = existingUser as { id: string } | null
+        supabaseUser = existingUser as { id: string; role?: string } | null
       }
 
       if (!supabaseUser?.id) {
@@ -78,6 +78,7 @@ export async function GET(req: NextRequest) {
       session.discordUsername = user.username
       session.discordAvatar = avatar
       session.isPremium = isPremium
+      session.role = (supabaseUser as { role?: string }).role ?? 'member'
       await session.save()
 
       return NextResponse.redirect(new URL(getRedirectPath(state), req.url))
