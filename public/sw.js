@@ -19,12 +19,18 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('fetch', (event) => {
-  // Network-first for API, cache-first for static assets
-  if (event.request.url.includes('/api/')) {
+  const url = new URL(event.request.url)
+
+  // Only handle /community paths — don't interfere with the rest of the site
+  if (!url.pathname.startsWith('/community')) return
+
+  // Network-first for API
+  if (url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(event.request))
     return
   }
 
+  // Cache-first for community assets
   event.respondWith(
     caches.match(event.request).then((cached) => {
       return cached || fetch(event.request).then((response) => {

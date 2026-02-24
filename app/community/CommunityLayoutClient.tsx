@@ -18,7 +18,7 @@ export default function CommunityLayoutClient({ children }: { children: React.Re
   // Register service worker
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {})
+      navigator.serviceWorker.register('/sw.js', { scope: '/community' }).catch(() => {})
     }
   }, [])
 
