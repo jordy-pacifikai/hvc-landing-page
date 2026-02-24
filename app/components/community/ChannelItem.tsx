@@ -12,12 +12,14 @@ interface Channel {
   is_readonly: boolean
   channel_type: string
   unread_count?: number
+  has_unread?: boolean
 }
 
 export default function ChannelItem({ channel }: { channel: Channel }) {
   const pathname = usePathname()
   const isActive = pathname === `/community/${channel.slug}`
-  const hasUnread = (channel.unread_count || 0) > 0
+  const hasUnreadCount = (channel.unread_count || 0) > 0
+  const hasUnread = hasUnreadCount || channel.has_unread
 
   return (
     <Link
@@ -41,10 +43,13 @@ export default function ChannelItem({ channel }: { channel: Channel }) {
         <Hash className="w-4 h-4 shrink-0 text-mist" />
       )}
       <span className="truncate">{channel.name}</span>
-      {hasUnread && (
+      {hasUnreadCount && (
         <span className="ml-auto bg-champagne text-void text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
           {channel.unread_count}
         </span>
+      )}
+      {!hasUnreadCount && channel.has_unread && !isActive && (
+        <span className="ml-auto w-2 h-2 rounded-full bg-champagne animate-pulse shrink-0" />
       )}
     </Link>
   )

@@ -8,12 +8,14 @@ import ForumPostList from '@/app/components/community/ForumPostList'
 import TypingIndicator from '@/app/components/community/TypingIndicator'
 import { useSession } from '@/app/lib/formation-hooks'
 import { useCommunityRealtime } from '@/app/lib/community-realtime'
+import { useMarkChannelRead } from '@/app/lib/community-hooks'
 
 export default function ChannelPage({ params }: { params: Promise<{ channelSlug: string }> }) {
   const { channelSlug } = use(params)
   const { channels, setActiveChannel } = useCommunityStore()
   const { data: session } = useSession()
   const channel = channels.find((c) => c.slug === channelSlug)
+  const { mutate: markRead } = useMarkChannelRead()
 
   // Subscribe to realtime messages for this channel
   useCommunityRealtime(channel?.id ?? null)
@@ -21,6 +23,13 @@ export default function ChannelPage({ params }: { params: Promise<{ channelSlug:
   useEffect(() => {
     setActiveChannel(channelSlug)
   }, [channelSlug, setActiveChannel])
+
+  // Auto mark-as-read when the user opens a channel
+  useEffect(() => {
+    if (channel && session?.authenticated) {
+      markRead(channelSlug)
+    }
+  }, [channelSlug, channel, session?.authenticated, markRead])
 
   if (!channel) {
     return (

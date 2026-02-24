@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useMessages } from '@/app/lib/community-hooks'
 import type { Message } from '@/app/lib/community-api'
+import MessageReactions from './MessageReactions'
 
 interface MessageListProps {
   channelSlug: string
@@ -156,10 +157,17 @@ function MessageRow({ msg, grouped }: MessageRowProps) {
     hour: '2-digit',
     minute: '2-digit',
   })
+  const [hovered, setHovered] = useState(false)
+
+  const reactions = msg.reactions ?? []
 
   if (grouped) {
     return (
-      <div className="flex gap-3 py-0.5 px-2 rounded-md hover:bg-[rgba(255,255,255,0.02)] group relative">
+      <div
+        className="flex gap-3 py-0.5 px-2 rounded-md hover:bg-[rgba(255,255,255,0.02)] group relative"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
         {/* Placeholder width to align with avatar */}
         <div className="w-10 shrink-0 flex items-center justify-center">
           <span className="text-mist/30 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity leading-none">
@@ -171,13 +179,22 @@ function MessageRow({ msg, grouped }: MessageRowProps) {
           {msg.pending && (
             <span className="text-mist/40 text-[10px] ml-1">envoi...</span>
           )}
+          <MessageReactions
+            messageId={msg.id}
+            reactions={reactions}
+            showAddButton={hovered}
+          />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex gap-3 py-1.5 px-2 rounded-md hover:bg-[rgba(255,255,255,0.02)] group">
+    <div
+      className="flex gap-3 py-1.5 px-2 rounded-md hover:bg-[rgba(255,255,255,0.02)] group"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       {avatarUrl ? (
         <img
           src={avatarUrl}
@@ -210,6 +227,11 @@ function MessageRow({ msg, grouped }: MessageRowProps) {
         {msg.pending && (
           <span className="text-mist/40 text-[10px]">envoi...</span>
         )}
+        <MessageReactions
+          messageId={msg.id}
+          reactions={reactions}
+          showAddButton={hovered}
+        />
       </div>
     </div>
   )
