@@ -17,6 +17,7 @@ import {
   markNotificationsRead,
   searchCommunity,
 } from './community-api'
+import type { Notification } from './community-api'
 
 export function useChannels() {
   return useQuery({
@@ -139,7 +140,7 @@ export function useAddForumComment() {
 }
 
 export function useNotifications() {
-  return useQuery({
+  return useQuery<Notification[]>({
     queryKey: ['community', 'notifications'],
     queryFn: fetchNotifications,
     refetchInterval: 30_000,

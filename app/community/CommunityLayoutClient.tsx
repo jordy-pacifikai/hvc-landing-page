@@ -7,10 +7,11 @@ import { useChannels } from '@/app/lib/community-hooks'
 import ChannelSidebar from '@/app/components/community/ChannelSidebar'
 import MembersSidebar from '@/app/components/community/MembersSidebar'
 import CommunityHeader from '@/app/components/community/CommunityHeader'
+import SearchModal from '@/app/components/community/SearchModal'
 
 export default function CommunityLayoutClient({ children }: { children: React.ReactNode }) {
   const { data: session, isLoading: sessionLoading } = useSession()
-  const { sidebarOpen, membersSidebarOpen } = useCommunityStore()
+  const { sidebarOpen, membersSidebarOpen, setSearchOpen, searchOpen } = useCommunityStore()
   const { data: channels } = useChannels()
   const { setChannels } = useCommunityStore()
 
@@ -19,6 +20,18 @@ export default function CommunityLayoutClient({ children }: { children: React.Re
       setChannels(channels)
     }
   }, [channels, setChannels])
+
+  // Cmd+K / Ctrl+K global listener
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen(!searchOpen)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [searchOpen, setSearchOpen])
 
   // Not authenticated — show login screen
   if (!sessionLoading && !session?.authenticated) {
@@ -165,6 +178,9 @@ export default function CommunityLayoutClient({ children }: { children: React.Re
       >
         <MembersSidebar />
       </aside>
+
+      {/* Search Modal — rendered at layout level, z-[100] */}
+      <SearchModal />
     </div>
   )
 }

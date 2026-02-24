@@ -1,7 +1,8 @@
 'use client'
 
 import { useCommunityStore } from '@/app/lib/community-store'
-import { Menu, Users, Search, Bell } from 'lucide-react'
+import { Menu, Users, Search } from 'lucide-react'
+import NotificationBell from './NotificationBell'
 
 export default function CommunityHeader() {
   const { channels, activeChannelSlug, toggleSidebar, toggleMembersSidebar, setSearchOpen } = useCommunityStore()
@@ -39,12 +40,9 @@ export default function CommunityHeader() {
         >
           <Search className="w-4 h-4" />
         </button>
-        <button
-          className="text-mist hover:text-ivory transition-colors p-1.5 rounded-md hover:bg-[rgba(255,255,255,0.05)] relative"
-          title="Notifications"
-        >
-          <Bell className="w-4 h-4" />
-        </button>
+
+        <NotificationBell />
+
         <button
           onClick={toggleMembersSidebar}
           className="hidden xl:block text-mist hover:text-ivory transition-colors p-1.5 rounded-md hover:bg-[rgba(255,255,255,0.05)]"
