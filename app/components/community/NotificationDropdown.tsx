@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { Bell } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useNotifications, useMarkNotificationsRead } from '@/app/lib/community-hooks'
+import { useCommunityStore } from '@/app/lib/community-store'
 import type { Notification } from '@/app/lib/community-api'
 
 // ---------------------------------------------------------------------------
@@ -22,11 +23,12 @@ function relativeTime(dateStr: string): string {
   return `il y a ${Math.floor(days / 7)}sem`
 }
 
-function notificationText(n: Notification): string {
+function notificationText(n: Notification, channelMap: Map<string, { slug: string; name: string }>): string {
   const sender = n.sender ? `@${n.sender.discord_username}` : 'Quelqu\'un'
+  const channelName = n.channel_id ? (channelMap.get(n.channel_id)?.name || 'channel') : ''
   switch (n.type) {
     case 'mention':
-      return `${sender} t'a mentionné${n.channel_id ? ` dans #${n.channel_id}` : ''}`
+      return `${sender} t'a mentionné${channelName ? ` dans #${channelName}` : ''}`
     case 'reply':
       return `${sender} a répondu à ton message`
     case 'reaction':
@@ -34,15 +36,18 @@ function notificationText(n: Notification): string {
     case 'forum_reply':
       return `${sender} a commenté ton post`
     case 'announcement':
-      return `Nouvelle annonce${n.channel_id ? ` dans #${n.channel_id}` : ''}`
+      return `Nouvelle annonce${channelName ? ` dans #${channelName}` : ''}`
     default:
       return `${sender} t'a envoyé une notification`
   }
 }
 
-function notificationHref(n: Notification): string {
+function notificationHref(n: Notification, channelMap: Map<string, { slug: string; name: string }>): string {
   if (n.post_id) return `/community/forum/${n.post_id}`
-  if (n.channel_id) return `/community/${n.channel_id}`
+  if (n.channel_id) {
+    const ch = channelMap.get(n.channel_id)
+    return `/community/${ch?.slug || n.channel_id}`
+  }
   return '/community'
 }
 
@@ -114,17 +119,18 @@ function NotificationSkeleton() {
 
 interface NotifItemProps {
   notification: Notification
+  channelMap: Map<string, { slug: string; name: string }>
   onRead: (id: string) => void
   onClose: () => void
 }
 
-function NotificationItem({ notification, onRead, onClose }: NotifItemProps) {
+function NotificationItem({ notification, channelMap, onRead, onClose }: NotifItemProps) {
   const router = useRouter()
   const isUnread = !notification.is_read
 
   function handleClick() {
     if (isUnread) onRead(notification.id)
-    router.push(notificationHref(notification))
+    router.push(notificationHref(notification, channelMap))
     onClose()
   }
 
@@ -143,7 +149,7 @@ function NotificationItem({ notification, onRead, onClose }: NotifItemProps) {
 
       <div className="flex-1 min-w-0">
         <p className={`text-xs leading-relaxed ${isUnread ? 'text-ivory' : 'text-pearl'}`}>
-          {notificationText(notification)}
+          {notificationText(notification, channelMap)}
         </p>
         <p className="text-[11px] text-mist mt-0.5">{relativeTime(notification.created_at)}</p>
       </div>
@@ -166,6 +172,12 @@ interface NotificationDropdownProps {
 export default function NotificationDropdown({ onClose }: NotificationDropdownProps) {
   const { data: notifications = [], isLoading } = useNotifications()
   const markRead = useMarkNotificationsRead()
+  const channels = useCommunityStore((s) => s.channels)
+  const channelMap = useMemo(() => {
+    const map = new Map<string, { slug: string; name: string }>()
+    channels.forEach((ch) => map.set(ch.id, { slug: ch.slug, name: ch.name }))
+    return map
+  }, [channels])
 
   const unreadIds = notifications.filter((n) => !n.is_read).map((n) => n.id)
 
@@ -185,7 +197,7 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
     <div
       className={[
         'absolute right-0 top-full mt-2 z-50',
-        'w-[380px] max-h-[480px]',
+        'w-[380px] max-w-[calc(100vw-2rem)] max-h-[480px]',
         'bg-[var(--color-charcoal)] border border-[rgba(99,102,241,0.12)] rounded-xl shadow-2xl',
         'flex flex-col overflow-hidden',
       ].join(' ')}
@@ -227,6 +239,7 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
             <NotificationItem
               key={n.id}
               notification={n}
+              channelMap={channelMap}
               onRead={handleReadOne}
               onClose={onClose}
             />

@@ -82,6 +82,21 @@ export interface Notification {
 
 // Fetch helpers
 
+export interface Member {
+  id: string
+  discord_username: string
+  discord_avatar: string | null
+  role: string
+  is_premium: boolean
+}
+
+export async function fetchMembers(): Promise<Member[]> {
+  const res = await fetch('/api/community/members')
+  if (!res.ok) return []
+  const data = await res.json()
+  return data.members || []
+}
+
 export async function fetchChannels() {
   const res = await fetch('/api/community/channels')
   if (!res.ok) return []
@@ -116,6 +131,16 @@ export async function uploadImage(file: File): Promise<string> {
   if (!res.ok) throw new Error('Upload failed')
   const data = await res.json()
   return data.url
+}
+
+export async function editMessage(messageId: string, content: string) {
+  const res = await fetch('/api/community/messages', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messageId, content }),
+  })
+  if (!res.ok) throw new Error('Failed to edit message')
+  return res.json()
 }
 
 export async function deleteMessage(messageId: string) {
@@ -199,6 +224,16 @@ export async function markNotificationsRead(ids: string[]) {
     body: JSON.stringify({ ids }),
   })
   if (!res.ok) throw new Error('Failed to mark as read')
+  return res.json()
+}
+
+export async function reportMessage(messageId: string, reason?: string) {
+  const res = await fetch('/api/community/messages/report', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messageId, reason }),
+  })
+  if (!res.ok) throw new Error('Failed to report message')
   return res.json()
 }
 

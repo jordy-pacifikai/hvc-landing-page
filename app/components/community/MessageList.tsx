@@ -3,11 +3,13 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { CornerDownRight } from 'lucide-react'
-import { useMessages, useRetryMessage } from '@/app/lib/community-hooks'
+import { CornerDownRight, ArrowDown } from 'lucide-react'
+import { useMessages, useRetryMessage, useEditMessage } from '@/app/lib/community-hooks'
 import { useSession } from '@/app/lib/formation-hooks'
 import { useCommunityStore } from '@/app/lib/community-store'
+import { useQueryClient } from '@tanstack/react-query'
 import type { Message } from '@/app/lib/community-api'
+import { getAvatarUrl, formatDateSeparator } from '@/app/lib/community-utils'
 import MessageReactions from './MessageReactions'
 import MessageActions from './MessageActions'
 
@@ -17,22 +19,6 @@ interface MessageListProps {
 }
 
 // --- Helpers ---
-
-function formatDateSeparator(dateStr: string): string {
-  const date = new Date(dateStr)
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(today.getDate() - 1)
-
-  const isSameDay = (a: Date, b: Date) =>
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-
-  if (isSameDay(date, today)) return "Aujourd'hui"
-  if (isSameDay(date, yesterday)) return 'Hier'
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-}
 
 function isSameDay(a: string, b: string) {
   const da = new Date(a)
@@ -48,12 +34,6 @@ function isGrouped(prev: Message, curr: Message): boolean {
   if (!prev || prev.user_id !== curr.user_id) return false
   const diff = new Date(curr.created_at).getTime() - new Date(prev.created_at).getTime()
   return diff < 5 * 60 * 1000 // 5 minutes
-}
-
-function getAvatarUrl(user: Message['user']): string | null {
-  if (!user?.discord_avatar) return null
-  const discordId = user.discord_id || user.id
-  return `https://cdn.discordapp.com/avatars/${discordId}/${user.discord_avatar}.png?size=64`
 }
 
 // --- Skeleton ---
@@ -208,6 +188,7 @@ interface HoverToolbarProps {
   currentUserId: string | undefined
   currentUserRole: string | undefined
   onReply: () => void
+  onEdit?: () => void
 }
 
 function HoverToolbar({
@@ -216,6 +197,7 @@ function HoverToolbar({
   currentUserId,
   currentUserRole,
   onReply,
+  onEdit,
 }: HoverToolbarProps) {
   return (
     <div className="flex items-center gap-0.5">
@@ -226,6 +208,7 @@ function HoverToolbar({
         channelSlug={channelSlug}
         currentUserId={currentUserId}
         currentUserRole={currentUserRole}
+        onEdit={onEdit}
       />
     </div>
   )
@@ -256,14 +239,43 @@ function MessageRow({
     minute: '2-digit',
   })
   const [hovered, setHovered] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editContent, setEditContent] = useState(msg.content)
+  const editRef = useRef<HTMLTextAreaElement>(null)
   const setActiveThread = useCommunityStore((s) => s.setActiveThread)
   const retryMessage = useRetryMessage(channelSlug)
+  const editMutation = useEditMessage()
+  const queryClient = useQueryClient()
 
   const reactions = msg.reactions ?? []
+  const isAuthor = currentUserId === msg.user_id
 
   const handleReply = useCallback(() => {
     setActiveThread(msg.id)
   }, [msg.id, setActiveThread])
+
+  const handleStartEdit = useCallback(() => {
+    setEditContent(msg.content)
+    setEditing(true)
+    setTimeout(() => editRef.current?.focus(), 0)
+  }, [msg.content])
+
+  const handleCancelEdit = useCallback(() => {
+    setEditing(false)
+    setEditContent(msg.content)
+  }, [msg.content])
+
+  const handleSaveEdit = useCallback(() => {
+    const trimmed = editContent.trim()
+    if (!trimmed || trimmed === msg.content) {
+      setEditing(false)
+      return
+    }
+    editMutation.mutate(
+      { messageId: msg.id, content: trimmed },
+      { onSuccess: () => setEditing(false) }
+    )
+  }, [editContent, msg.content, msg.id, editMutation])
 
   const handleRetry = useCallback(() => {
     if (msg.failedContent) {
@@ -289,9 +301,20 @@ function MessageRow({
       <button
         type="button"
         onClick={() => {
-          // Remove failed message from cache
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setActiveThread(null as any) // dummy to trigger re-render; actual removal via store
+          // Remove failed message from TanStack Query cache
+          queryClient.setQueryData<{ pages: { messages: Message[]; hasMore: boolean }[]; pageParams: unknown[] }>(
+            ['community', 'messages', channelSlug],
+            (old) => {
+              if (!old) return old
+              return {
+                ...old,
+                pages: old.pages.map((page) => ({
+                  ...page,
+                  messages: page.messages.filter((m) => m.id !== msg.id),
+                })),
+              }
+            }
+          )
         }}
         className="text-mist/50 hover:text-red-400 transition-colors"
       >
@@ -314,9 +337,41 @@ function MessageRow({
           </span>
         </div>
         <div className="min-w-0 flex-1">
-          <div className={msg.failed ? 'text-red-400/40' : ''}>
-            <MessageContent content={msg.content} />
-          </div>
+          {editing ? (
+            <div className="space-y-1.5">
+              <textarea
+                ref={editRef}
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit() }
+                  if (e.key === 'Escape') handleCancelEdit()
+                }}
+                className="w-full bg-[var(--color-void)] text-ivory text-sm px-3 py-2 rounded-md border border-[rgba(99,102,241,0.2)] focus:border-[rgba(99,102,241,0.4)] outline-none resize-none"
+                rows={2}
+              />
+              <div className="flex items-center gap-2 text-[10px]">
+                <span className="text-mist/40">Echap pour annuler · Entree pour sauvegarder</span>
+                <button type="button" onClick={handleCancelEdit} className="text-mist/60 hover:text-mist transition-colors">Annuler</button>
+                <button type="button" onClick={handleSaveEdit} disabled={editMutation.isPending} className="text-champagne/80 hover:text-champagne transition-colors disabled:opacity-50">Sauvegarder</button>
+              </div>
+            </div>
+          ) : (
+            <div className={msg.failed ? 'text-red-400/40' : ''}>
+              <MessageContent content={msg.content} />
+            </div>
+          )}
+          {msg.image_url && (
+            <div className="mt-1.5">
+              <img
+                src={`https://wsrv.nl/?url=${encodeURIComponent(msg.image_url)}&w=400&q=80&output=webp`}
+                alt="Image jointe"
+                loading="lazy"
+                className="max-w-sm rounded-lg border border-[rgba(255,255,255,0.06)] cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => window.open(msg.image_url!, '_blank')}
+              />
+            </div>
+          )}
           {StatusLine}
           <div className="flex items-center gap-2 flex-wrap">
             <MessageReactions
@@ -324,13 +379,14 @@ function MessageRow({
               reactions={reactions}
               showAddButton={hovered && !msg.pending && !msg.failed}
             />
-            {hovered && !msg.pending && !msg.failed && (
+            {hovered && !msg.pending && !msg.failed && !editing && (
               <HoverToolbar
                 msg={msg}
                 channelSlug={channelSlug}
                 currentUserId={currentUserId}
                 currentUserRole={currentUserRole}
                 onReply={handleReply}
+                onEdit={isAuthor ? handleStartEdit : undefined}
               />
             )}
           </div>
@@ -376,9 +432,41 @@ function MessageRow({
             <span className="text-mist/30 text-[10px]">(modifie)</span>
           )}
         </div>
-        <div className={msg.failed ? 'text-red-400/40' : ''}>
-          <MessageContent content={msg.content} />
-        </div>
+        {editing ? (
+          <div className="space-y-1.5">
+            <textarea
+              ref={editRef}
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit() }
+                if (e.key === 'Escape') handleCancelEdit()
+              }}
+              className="w-full bg-[var(--color-void)] text-ivory text-sm px-3 py-2 rounded-md border border-[rgba(99,102,241,0.2)] focus:border-[rgba(99,102,241,0.4)] outline-none resize-none"
+              rows={2}
+            />
+            <div className="flex items-center gap-2 text-[10px]">
+              <span className="text-mist/40">Echap pour annuler · Entree pour sauvegarder</span>
+              <button type="button" onClick={handleCancelEdit} className="text-mist/60 hover:text-mist transition-colors">Annuler</button>
+              <button type="button" onClick={handleSaveEdit} disabled={editMutation.isPending} className="text-champagne/80 hover:text-champagne transition-colors disabled:opacity-50">Sauvegarder</button>
+            </div>
+          </div>
+        ) : (
+          <div className={msg.failed ? 'text-red-400/40' : ''}>
+            <MessageContent content={msg.content} />
+          </div>
+        )}
+        {msg.image_url && (
+          <div className="mt-1.5">
+            <img
+              src={`https://wsrv.nl/?url=${encodeURIComponent(msg.image_url)}&w=400&q=80&output=webp`}
+              alt="Image jointe"
+              loading="lazy"
+              className="max-w-sm rounded-lg border border-[rgba(255,255,255,0.06)] cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => window.open(msg.image_url!, '_blank')}
+            />
+          </div>
+        )}
         {StatusLine}
         <div className="flex items-center gap-2 flex-wrap">
           <MessageReactions
@@ -386,13 +474,14 @@ function MessageRow({
             reactions={reactions}
             showAddButton={hovered && !msg.pending && !msg.failed}
           />
-          {hovered && !msg.pending && !msg.failed && (
+          {hovered && !msg.pending && !msg.failed && !editing && (
             <HoverToolbar
               msg={msg}
               channelSlug={channelSlug}
               currentUserId={currentUserId}
               currentUserRole={currentUserRole}
               onReply={handleReply}
+              onEdit={isAuthor ? handleStartEdit : undefined}
             />
           )}
         </div>
@@ -418,6 +507,8 @@ export default function MessageList({ channelSlug }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const topSentinelRef = useRef<HTMLDivElement>(null)
   const isNearBottomRef = useRef(true)
+  const [showScrollDown, setShowScrollDown] = useState(false)
+  const [newMsgCount, setNewMsgCount] = useState(0)
 
   // Flatten pages — newest last (pages are in reverse order from API cursor)
   const messages: Message[] = data?.pages
@@ -438,7 +529,10 @@ export default function MessageList({ channelSlug }: MessageListProps) {
     const el = containerRef.current
     if (!el) return
     const threshold = 150
-    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold
+    isNearBottomRef.current = nearBottom
+    setShowScrollDown(!nearBottom)
+    if (nearBottom) setNewMsgCount(0)
   }, [])
 
   // Scroll to bottom on initial load
@@ -451,8 +545,13 @@ export default function MessageList({ channelSlug }: MessageListProps) {
   // Scroll to bottom when new messages arrive and user is near bottom
   const prevLengthRef = useRef(messages.length)
   useEffect(() => {
-    if (messages.length > prevLengthRef.current && isNearBottomRef.current) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const added = messages.length - prevLengthRef.current
+    if (added > 0) {
+      if (isNearBottomRef.current) {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+      } else {
+        setNewMsgCount((n) => n + added)
+      }
     }
     prevLengthRef.current = messages.length
   }, [messages.length])
@@ -583,6 +682,33 @@ export default function MessageList({ channelSlug }: MessageListProps) {
 
       {/* Bottom anchor for scroll */}
       <div ref={bottomRef} className="h-1" />
+
+      {/* Jump to bottom button */}
+      {showScrollDown && (
+        <button
+          type="button"
+          onClick={() => {
+            bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+            setNewMsgCount(0)
+          }}
+          className="
+            sticky bottom-3 left-1/2 -translate-x-1/2
+            flex items-center gap-1.5 px-3 py-1.5 rounded-full
+            bg-[var(--color-charcoal)] border border-[rgba(255,255,255,0.1)]
+            text-mist/70 hover:text-ivory hover:border-[rgba(255,255,255,0.2)]
+            shadow-lg transition-all duration-200
+            text-xs font-medium
+            z-10
+          "
+        >
+          <ArrowDown className="w-3.5 h-3.5" />
+          {newMsgCount > 0 ? (
+            <span>{newMsgCount} nouveau{newMsgCount > 1 ? 'x' : ''}</span>
+          ) : (
+            <span>Aller en bas</span>
+          )}
+        </button>
+      )}
     </div>
   )
 }

@@ -9,6 +9,8 @@ export interface SessionData {
   discordAvatar: string | null
   isPremium: boolean
   role?: string
+  /** Timestamp (ms) of last Discord role revalidation */
+  lastRoleCheck?: number
 }
 
 const sessionOptions = {
@@ -27,10 +29,12 @@ export async function getSession(): Promise<IronSession<SessionData>> {
   return getIronSession<SessionData>(cookieStore, sessionOptions)
 }
 
+const ROLE_RECHECK_MS = 15 * 60 * 1000 // 15 minutes
+
 /**
- * Returns session + ensures isPremium is set.
- * For old sessions missing isPremium, falls back to a live Discord check
- * and refreshes the session cookie in place.
+ * Returns session + ensures isPremium is set and periodically revalidated.
+ * Revalidates role+isPremium via Discord every 15 minutes so revocations
+ * take effect within that window instead of waiting 7 days for cookie expiry.
  */
 export async function getSessionWithPremium(): Promise<IronSession<SessionData>> {
   const session = await getSession()
@@ -38,14 +42,23 @@ export async function getSessionWithPremium(): Promise<IronSession<SessionData>>
   // Session has no userId — not authenticated
   if (!session.userId) return session
 
-  // isPremium already set (new sessions) — return as-is
-  if (typeof session.isPremium === 'boolean') return session
+  const now = Date.now()
+  const needsRecheck =
+    typeof session.isPremium !== 'boolean' ||
+    !session.lastRoleCheck ||
+    now - session.lastRoleCheck > ROLE_RECHECK_MS
 
-  // Old session: isPremium missing — check Discord live and patch the cookie
-  if (session.discordId) {
-    const isPremium = await hasPremiumRole(session.discordId)
-    session.isPremium = isPremium
-    await session.save()
+  if (needsRecheck && session.discordId) {
+    // Skip Discord API call for dev/test users
+    if (session.userId?.startsWith('dev-')) {
+      session.lastRoleCheck = now
+      await session.save()
+    } else {
+      const isPremium = await hasPremiumRole(session.discordId)
+      session.isPremium = isPremium
+      session.lastRoleCheck = now
+      await session.save()
+    }
   }
 
   return session

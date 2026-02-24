@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from '@/app/lib/session'
+import { getSessionWithPremium as getSession } from '@/app/lib/session'
+import { rateLimit } from '@/app/lib/rate-limit'
 
 const SUPABASE_PROJECT_REF = 'ogsimsfqwibcmotaeevb'
 const SUPABASE_STORAGE_URL = `https://${SUPABASE_PROJECT_REF}.supabase.co/storage/v1/object`
@@ -15,8 +16,14 @@ const EXT_MAP: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
   const session = await getSession()
-  if (!session.userId) {
+  if (!session.userId || !session.isPremium) {
     return NextResponse.json({ error: 'Non autorise' }, { status: 401 })
+  }
+
+  // Rate limit: 10 uploads per minute
+  const rl = rateLimit(`upload:${session.userId}`, 10, 60_000)
+  if (!rl.ok) {
+    return NextResponse.json({ error: 'Trop de fichiers. Reessaie dans quelques secondes.' }, { status: 429 })
   }
 
   const serviceKey = process.env.SUPABASE_SERVICE_KEY

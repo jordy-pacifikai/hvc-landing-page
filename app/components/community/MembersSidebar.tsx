@@ -1,8 +1,10 @@
 'use client'
 
+import { useMemo } from 'react'
+import { useMembers } from '@/app/lib/community-hooks'
 import { useCommunityStore } from '@/app/lib/community-store'
+import type { Member } from '@/app/lib/community-api'
 
-// Shimmer skeleton for a single member row
 function MemberSkeleton() {
   return (
     <div className="flex items-center gap-2 px-2 py-1">
@@ -28,61 +30,104 @@ function MemberSkeleton() {
   )
 }
 
-function OnlineDot() {
+function getAvatarUrl(member: Member): string | null {
+  if (!member.discord_avatar) return null
+  return `https://cdn.discordapp.com/avatars/${member.id}/${member.discord_avatar}.png?size=64`
+}
+
+function MemberRow({ member, isOnline }: { member: Member; isOnline: boolean }) {
+  const avatarUrl = getAvatarUrl(member)
+
   return (
-    <span className="relative flex-shrink-0">
-      <span className="block w-2 h-2 rounded-full bg-green-500" />
-      <span
-        className="absolute inset-0 rounded-full bg-green-500 opacity-60"
-        style={{ animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite' }}
-      />
-    </span>
+    <div className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-[rgba(255,255,255,0.04)] transition-colors cursor-default group">
+      <div className="relative shrink-0">
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt=""
+            width={28}
+            height={28}
+            className="w-7 h-7 rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-champagne/30 to-champagne/10 border border-champagne/20 flex items-center justify-center text-xs font-semibold text-champagne/80 select-none">
+            {member.discord_username?.[0]?.toUpperCase() || '?'}
+          </div>
+        )}
+        {isOnline && (
+          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-[var(--color-obsidian)]" />
+        )}
+      </div>
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className={`text-xs truncate ${isOnline ? 'text-mist/80 group-hover:text-ivory' : 'text-mist/40 group-hover:text-mist/60'} transition-colors`}>
+          {member.discord_username}
+        </span>
+        {member.role && member.role !== 'member' && (
+          <span className="text-[8px] px-1 py-0.5 rounded-full bg-[rgba(99,102,241,0.15)] text-gold-pale font-medium uppercase shrink-0">
+            {member.role}
+          </span>
+        )}
+      </div>
+    </div>
   )
 }
 
 export default function MembersSidebar() {
-  const onlineUsers = useCommunityStore((s) => s.onlineUsers)
-  const onlineCount = onlineUsers.length
+  const { data: members, isLoading } = useMembers()
+  const onlineUserIds = useCommunityStore((s) => s.onlineUsers)
 
-  // onlineUsers is a string[] of userIds — we show count only for this first version.
-  // Full member list with avatars arrives with the /api/community/members endpoint.
+  const onlineSet = useMemo(() => new Set(onlineUserIds), [onlineUserIds])
+
+  const { online, offline } = useMemo(() => {
+    if (!members) return { online: [], offline: [] }
+    const on: Member[] = []
+    const off: Member[] = []
+    for (const m of members) {
+      if (onlineSet.has(m.id)) on.push(m)
+      else off.push(m)
+    }
+    return { online: on, offline: off }
+  }, [members, onlineSet])
+
+  if (isLoading) {
+    return (
+      <div className="h-full overflow-y-auto py-4 space-y-5">
+        <section>
+          <h3 className="px-4 text-[10px] font-semibold text-mist/50 uppercase tracking-widest mb-2">
+            Membres
+          </h3>
+          <div className="space-y-0.5 px-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <MemberSkeleton key={i} />
+            ))}
+          </div>
+        </section>
+      </div>
+    )
+  }
 
   return (
     <div className="h-full overflow-y-auto py-4 space-y-5">
       {/* Online section */}
       <section>
         <h3 className="px-4 text-[10px] font-semibold text-mist/50 uppercase tracking-widest mb-2 flex items-center gap-2">
-          <OnlineDot />
+          <span className="relative flex-shrink-0">
+            <span className="block w-2 h-2 rounded-full bg-green-500" />
+          </span>
           En ligne
           <span className="ml-auto text-mist/40 font-normal normal-case tracking-normal text-[10px]">
-            {onlineCount}
+            {online.length}
           </span>
         </h3>
 
-        {onlineCount === 0 ? (
+        {online.length === 0 ? (
           <div className="px-4 py-1">
             <p className="text-mist/40 text-xs">Aucun membre en ligne</p>
           </div>
         ) : (
           <div className="space-y-0.5 px-2">
-            {/* Skeleton rows representing online users by count */}
-            {Array.from({ length: onlineCount }).map((_, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-[rgba(255,255,255,0.04)] transition-colors cursor-default group"
-              >
-                {/* Avatar placeholder — initials avatar until /members API */}
-                <div className="relative shrink-0">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-champagne/30 to-champagne/10 border border-champagne/20 flex items-center justify-center text-xs font-semibold text-champagne/80 select-none">
-                    ?
-                  </div>
-                  {/* Online indicator dot */}
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-[var(--color-obsidian)]" />
-                </div>
-                <span className="text-xs text-mist/60 group-hover:text-mist/80 transition-colors truncate">
-                  Membre en ligne
-                </span>
-              </div>
+            {online.map((m) => (
+              <MemberRow key={m.id} member={m} isOnline />
             ))}
           </div>
         )}
@@ -91,21 +136,26 @@ export default function MembersSidebar() {
       {/* Divider */}
       <div className="mx-4 h-px bg-[rgba(255,255,255,0.05)]" />
 
-      {/* Offline section — placeholder until /members API */}
+      {/* Offline section */}
       <section>
         <h3 className="px-4 text-[10px] font-semibold text-mist/30 uppercase tracking-widest mb-2 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-mist/25 shrink-0" />
           Hors ligne
+          <span className="ml-auto text-mist/30 font-normal normal-case tracking-normal text-[10px]">
+            {offline.length}
+          </span>
         </h3>
-        <div className="space-y-0.5 px-2">
-          {/* Skeleton rows for offline members — shown as "loading" until /members API */}
-          {Array.from({ length: 3 }).map((_, i) => (
-            <MemberSkeleton key={i} />
-          ))}
-        </div>
-        <p className="px-4 mt-3 text-[10px] text-mist/25 italic">
-          Liste complète disponible prochainement
-        </p>
+        {offline.length === 0 ? (
+          <div className="px-4 py-1">
+            <p className="text-mist/25 text-xs">Tous les membres sont en ligne</p>
+          </div>
+        ) : (
+          <div className="space-y-0.5 px-2">
+            {offline.map((m) => (
+              <MemberRow key={m.id} member={m} isOnline={false} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   )

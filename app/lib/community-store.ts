@@ -54,11 +54,15 @@ interface CommunityState {
   // Search
   searchOpen: boolean
   setSearchOpen: (open: boolean) => void
+
+  // Realtime status
+  realtimeConnected: boolean
+  setRealtimeConnected: (connected: boolean) => void
 }
 
 export const useCommunityStore = create<CommunityState>((set) => ({
-  sidebarOpen: true,
-  membersSidebarOpen: true,
+  sidebarOpen: typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)').matches : true,
+  membersSidebarOpen: typeof window !== 'undefined' ? window.matchMedia('(min-width: 1280px)').matches : true,
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   toggleMembersSidebar: () => set((s) => ({ membersSidebarOpen: !s.membersSidebarOpen })),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
@@ -93,4 +97,7 @@ export const useCommunityStore = create<CommunityState>((set) => ({
 
   searchOpen: false,
   setSearchOpen: (open) => set({ searchOpen: open }),
+
+  realtimeConnected: false,
+  setRealtimeConnected: (connected) => set({ realtimeConnected: connected }),
 }))

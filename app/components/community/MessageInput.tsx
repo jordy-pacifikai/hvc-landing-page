@@ -1,34 +1,72 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Send, ImagePlus, X } from 'lucide-react'
+import { Send, ImagePlus, X, Smile } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSendMessage } from '@/app/lib/community-hooks'
 import { useSession } from '@/app/lib/formation-hooks'
 import { uploadImage } from '@/app/lib/community-api'
+import { useTypingBroadcast } from '@/app/lib/community-realtime'
 import type { Message } from '@/app/lib/community-api'
+import type { SessionData, InfiniteMessages } from '@/app/lib/community-types'
 
 interface MessageInputProps {
   channelId: string
   channelSlug: string
 }
 
-type SessionData = {
-  authenticated: boolean
-  userId?: string
-  discordId?: string
-  discordUsername?: string
-  discordAvatar?: string | null
-  isPremium?: boolean
-}
-
-type InfiniteData = {
-  pages: { messages: Message[]; hasMore: boolean }[]
-  pageParams: unknown[]
-}
-
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+
+const INPUT_EMOJIS = [
+  '👍', '❤️', '😂', '🔥', '🚀', '💯', '🎯', '💰',
+  '📈', '📉', '🐂', '🐻', '💎', '🙌', '👀', '🤔',
+  '😮', '😢', '🎉', '✅', '❌', '⚠️', '💡', '🏆',
+]
+
+function InputEmojiPicker({
+  onSelect,
+  onClose,
+}: {
+  onSelect: (emoji: string) => void
+  onClose: () => void
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose()
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [onClose])
+
+  return (
+    <div
+      ref={ref}
+      className="absolute bottom-full mb-2 left-0 z-50 p-2 rounded-lg border border-[rgba(255,255,255,0.08)] shadow-xl"
+      style={{ background: 'var(--color-charcoal, #1a1a1a)' }}
+    >
+      <div className="grid grid-cols-8 gap-0.5">
+        {INPUT_EMOJIS.map((emoji) => (
+          <button
+            key={emoji}
+            type="button"
+            onClick={() => {
+              onSelect(emoji)
+              onClose()
+            }}
+            className="w-8 h-8 flex items-center justify-center text-lg rounded-md hover:bg-[rgba(255,255,255,0.08)] transition-colors"
+          >
+            {emoji}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 // --- Image preview shimmer skeleton ---
 
@@ -51,12 +89,27 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false)
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const queryClient = useQueryClient()
   const { mutate: send, isPending } = useSendMessage()
   const { data: session } = useSession() as { data: SessionData | null }
+  const { sendTyping } = useTypingBroadcast(channelId)
+
+  // Debounced typing broadcast (~8s like Discord)
+  const handleTyping = useCallback(() => {
+    if (!session?.userId || !session?.discordUsername) return
+    if (!typingTimeoutRef.current) {
+      sendTyping(session.userId, session.discordUsername, true)
+    }
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+    typingTimeoutRef.current = setTimeout(() => {
+      typingTimeoutRef.current = null
+    }, 8000)
+  }, [sendTyping, session?.userId, session?.discordUsername])
 
   // Cleanup object URL on unmount or when preview changes
   useEffect(() => {
@@ -142,6 +195,15 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
       textareaRef.current.style.height = 'auto'
     }
 
+    // Stop typing indicator
+    if (session?.userId && session?.discordUsername) {
+      sendTyping(session.userId, session.discordUsername, false)
+    }
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+      typingTimeoutRef.current = null
+    }
+
     // --- Optimistic update ---
     const tempId = `pending-${Date.now()}`
     const optimisticMsg: Message = {
@@ -164,7 +226,7 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
       },
     }
 
-    queryClient.setQueryData<InfiniteData>(
+    queryClient.setQueryData<InfiniteMessages>(
       ['community', 'messages', channelSlug],
       (old) => {
         if (!old) return old
@@ -181,7 +243,7 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
       { channelId, content: trimmed, imageUrl: uploadedUrl },
       {
         onSuccess: (serverMsg: Message) => {
-          queryClient.setQueryData<InfiniteData>(
+          queryClient.setQueryData<InfiniteMessages>(
             ['community', 'messages', channelSlug],
             (old) => {
               if (!old) return old
@@ -198,7 +260,7 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
         onError: () => {
           // Mark message as failed inline (Discord/Slack pattern)
           // Don't remove it — let the user retry from the message itself
-          queryClient.setQueryData<InfiniteData>(
+          queryClient.setQueryData<InfiniteMessages>(
             ['community', 'messages', channelSlug],
             (old) => {
               if (!old) return old
@@ -216,7 +278,7 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
         },
       }
     )
-  }, [content, pendingImage, isPending, isUploading, send, channelId, channelSlug, queryClient, session, removeImage])
+  }, [content, pendingImage, isPending, isUploading, send, channelId, channelSlug, queryClient, session, removeImage, sendTyping])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -294,6 +356,33 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
           <ImagePlus className="w-4 h-4" />
         </button>
 
+        {/* Emoji picker button */}
+        <div className="relative shrink-0 mb-1">
+          <button
+            type="button"
+            onClick={() => setEmojiPickerOpen((v) => !v)}
+            title="Inserer un emoji"
+            className={`
+              p-3 rounded-lg transition-all
+              ${emojiPickerOpen
+                ? 'text-champagne bg-[rgba(255,255,255,0.06)]'
+                : 'text-mist hover:text-ivory hover:bg-[rgba(255,255,255,0.05)]'
+              }
+            `}
+          >
+            <Smile className="w-4 h-4" />
+          </button>
+          {emojiPickerOpen && (
+            <InputEmojiPicker
+              onSelect={(emoji) => {
+                setContent((prev) => prev + emoji)
+                textareaRef.current?.focus()
+              }}
+              onClose={() => setEmojiPickerOpen(false)}
+            />
+          )}
+        </div>
+
         {/* Hidden file input */}
         <input
           ref={fileInputRef}
@@ -306,7 +395,7 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
         <textarea
           ref={textareaRef}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => { setContent(e.target.value); handleTyping() }}
           onKeyDown={handleKeyDown}
           onInput={handleInput}
           onPaste={handlePaste}

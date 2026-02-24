@@ -10,6 +10,7 @@ export type RealtimeStatus = 'connecting' | 'connected' | 'disconnected'
 
 export function useCommunityRealtime(channelId: string | null) {
   const queryClient = useQueryClient()
+  const setRealtimeConnected = useCommunityStore((s) => s.setRealtimeConnected)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channelRef = useRef<any>(null)
   const [status, setStatus] = useState<RealtimeStatus>('connecting')
@@ -40,6 +41,18 @@ export function useCommunityRealtime(channelId: string | null) {
       .on(
         'postgres_changes',
         {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'hvc_messages',
+          filter: `channel_id=eq.${channelId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['community', 'messages'] })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
           event: 'DELETE',
           schema: 'public',
           table: 'hvc_messages',
@@ -50,8 +63,8 @@ export function useCommunityRealtime(channelId: string | null) {
         }
       )
       .subscribe((s) => {
-        if (s === 'SUBSCRIBED') setStatus('connected')
-        else if (s === 'CLOSED' || s === 'CHANNEL_ERROR') setStatus('disconnected')
+        if (s === 'SUBSCRIBED') { setStatus('connected'); setRealtimeConnected(true) }
+        else if (s === 'CLOSED' || s === 'CHANNEL_ERROR') { setStatus('disconnected'); setRealtimeConnected(false) }
         else setStatus('connecting')
       })
 
@@ -119,11 +132,15 @@ export function useTypingBroadcast(channelId: string | null) {
 
 export function usePresence() {
   const setOnlineUsers = useCommunityStore((s) => s.setOnlineUsers)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const presenceRef = useRef<any>(null)
+  const subscribedRef = useRef(false)
 
   useEffect(() => {
     if (!supabase) return
 
     const channel = supabase.channel('online-users')
+    presenceRef.current = channel
 
     channel
       .on('presence', { event: 'sync' }, () => {
@@ -138,17 +155,20 @@ export function usePresence() {
         })
         setOnlineUsers(users)
       })
-      .subscribe()
+      .subscribe((status) => {
+        subscribedRef.current = status === 'SUBSCRIBED'
+      })
 
     return () => {
+      subscribedRef.current = false
       if (supabase) supabase.removeChannel(channel)
+      presenceRef.current = null
     }
   }, [setOnlineUsers])
 
   const trackPresence = (userId: string, username: string) => {
-    if (!supabase) return
-    const channel = supabase.channel('online-users')
-    channel.track({
+    if (!presenceRef.current || !subscribedRef.current) return
+    presenceRef.current.track({
       userId,
       username,
       online_at: new Date().toISOString(),

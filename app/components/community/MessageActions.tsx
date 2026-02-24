@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { MoreHorizontal, Trash2, Flag, Link2 } from 'lucide-react'
+import { MoreHorizontal, Trash2, Flag, Link2, Pencil } from 'lucide-react'
 import { useDeleteMessage } from '@/app/lib/community-hooks'
+import { reportMessage } from '@/app/lib/community-api'
 
 interface MessageActionsProps {
   messageId: string
@@ -10,6 +11,7 @@ interface MessageActionsProps {
   channelSlug: string
   currentUserId: string | undefined
   currentUserRole: string | undefined
+  onEdit?: () => void
 }
 
 export default function MessageActions({
@@ -18,6 +20,7 @@ export default function MessageActions({
   channelSlug,
   currentUserId,
   currentUserRole,
+  onEdit,
 }: MessageActionsProps) {
   const [open, setOpen] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
@@ -49,14 +52,18 @@ export default function MessageActions({
   }, [toast])
 
   const handleDelete = useCallback(() => {
-    setOpen(false)
+    if (!window.confirm('Supprimer ce message ? Cette action est irréversible.')) return
     deleteMessage.mutate(messageId)
+    setOpen(false)
   }, [deleteMessage, messageId])
 
   const handleReport = useCallback(() => {
     setOpen(false)
-    setToast('Message signale')
-  }, [])
+    reportMessage(messageId).then(
+      () => setToast('Message signale aux moderateurs'),
+      () => setToast('Erreur lors du signalement')
+    )
+  }, [messageId])
 
   const handleCopyLink = useCallback(() => {
     setOpen(false)
@@ -96,6 +103,23 @@ export default function MessageActions({
             'py-1 overflow-hidden',
           ].join(' ')}
         >
+          {/* Modifier — author only */}
+          {isAuthor && onEdit && (
+            <button
+              type="button"
+              onClick={() => { setOpen(false); onEdit() }}
+              className={[
+                'w-full flex items-center gap-2.5 px-3 py-2 text-sm',
+                'text-mist hover:text-ivory',
+                'hover:bg-[rgba(255,255,255,0.05)]',
+                'transition-colors duration-100',
+              ].join(' ')}
+            >
+              <Pencil className="w-3.5 h-3.5 shrink-0" />
+              <span>Modifier</span>
+            </button>
+          )}
+
           {/* Supprimer — only for author or mod */}
           {canDelete && (
             <button

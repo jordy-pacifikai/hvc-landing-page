@@ -9,6 +9,11 @@ import { useCommunityStore } from '@/app/lib/community-store'
 import { useSendMessage } from '@/app/lib/community-hooks'
 import { useSession } from '@/app/lib/formation-hooks'
 import type { Message } from '@/app/lib/community-api'
+import type { SessionData, InfiniteMessages } from '@/app/lib/community-types'
+import { getAvatarUrl, formatTime, formatDate } from '@/app/lib/community-utils'
+import MessageReactions from './MessageReactions'
+import MessageActions from './MessageActions'
+import { useEditMessage } from '@/app/lib/community-hooks'
 
 // --- Types ---
 
@@ -17,56 +22,6 @@ interface ThreadPanelProps {
   channelId: string
   channelSlug: string
   onClose: () => void
-}
-
-type InfiniteData = {
-  pages: { messages: Message[]; hasMore: boolean }[]
-  pageParams: unknown[]
-}
-
-type SessionData = {
-  authenticated: boolean
-  userId?: string
-  discordId?: string
-  discordUsername?: string
-  discordAvatar?: string | null
-  isPremium?: boolean
-}
-
-// --- Helpers ---
-
-function getAvatarUrl(user: Message['user']): string | null {
-  if (!user?.discord_avatar) return null
-  const discordId = user.discord_id || user.id
-  return `https://cdn.discordapp.com/avatars/${discordId}/${user.discord_avatar}.png?size=64`
-}
-
-function formatTime(dateStr: string) {
-  return new Date(dateStr).toLocaleTimeString('fr-FR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function formatDate(dateStr: string) {
-  const date = new Date(dateStr)
-  const today = new Date()
-  const isSameDay =
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate()
-
-  if (isSameDay) return "Aujourd'hui"
-
-  const yesterday = new Date(today)
-  yesterday.setDate(today.getDate() - 1)
-  const isYesterday =
-    date.getFullYear() === yesterday.getFullYear() &&
-    date.getMonth() === yesterday.getMonth() &&
-    date.getDate() === yesterday.getDate()
-
-  if (isYesterday) return 'Hier'
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
 }
 
 // --- Skeleton ---
@@ -204,12 +159,53 @@ function ParentMessage({ msg }: { msg: Message }) {
 
 // --- ThreadReplyRow (compact message row for replies) ---
 
-function ThreadReplyRow({ msg }: { msg: Message }) {
+function ThreadReplyRow({
+  msg,
+  channelSlug,
+  currentUserId,
+  currentUserRole,
+}: {
+  msg: Message
+  channelSlug: string
+  currentUserId: string | undefined
+  currentUserRole: string | undefined
+}) {
   const avatarUrl = getAvatarUrl(msg.user)
   const time = formatTime(msg.created_at)
+  const [hovered, setHovered] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editContent, setEditContent] = useState(msg.content)
+  const editRef = useRef<HTMLTextAreaElement>(null)
+  const editMutation = useEditMessage()
+  const reactions = msg.reactions ?? []
+  const isAuthor = currentUserId === msg.user_id
+
+  const handleStartEdit = useCallback(() => {
+    setEditContent(msg.content)
+    setEditing(true)
+    setTimeout(() => editRef.current?.focus(), 0)
+  }, [msg.content])
+
+  const handleCancelEdit = useCallback(() => {
+    setEditing(false)
+    setEditContent(msg.content)
+  }, [msg.content])
+
+  const handleSaveEdit = useCallback(() => {
+    const trimmed = editContent.trim()
+    if (!trimmed || trimmed === msg.content) { setEditing(false); return }
+    editMutation.mutate(
+      { messageId: msg.id, content: trimmed },
+      { onSuccess: () => setEditing(false) }
+    )
+  }, [editContent, msg.content, msg.id, editMutation])
 
   return (
-    <div className="flex gap-2.5 px-4 py-1.5 rounded-md hover:bg-[rgba(255,255,255,0.02)] transition-colors group">
+    <div
+      className="flex gap-2.5 px-4 py-1.5 rounded-md hover:bg-[rgba(255,255,255,0.02)] transition-colors group"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       {avatarUrl ? (
         <img
           src={avatarUrl}
@@ -238,10 +234,48 @@ function ThreadReplyRow({ msg }: { msg: Message }) {
             <span className="text-mist/30 text-[10px]">(modifie)</span>
           )}
         </div>
-        <MessageContent content={msg.content} />
+        {editing ? (
+          <div className="space-y-1.5">
+            <textarea
+              ref={editRef}
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit() }
+                if (e.key === 'Escape') handleCancelEdit()
+              }}
+              className="w-full bg-[var(--color-void)] text-ivory text-sm px-3 py-2 rounded-md border border-[rgba(99,102,241,0.2)] focus:border-[rgba(99,102,241,0.4)] outline-none resize-none"
+              rows={2}
+            />
+            <div className="flex items-center gap-2 text-[10px]">
+              <span className="text-mist/40">Echap pour annuler · Entree pour sauvegarder</span>
+              <button type="button" onClick={handleCancelEdit} className="text-mist/60 hover:text-mist transition-colors">Annuler</button>
+              <button type="button" onClick={handleSaveEdit} disabled={editMutation.isPending} className="text-champagne/80 hover:text-champagne transition-colors disabled:opacity-50">Sauvegarder</button>
+            </div>
+          </div>
+        ) : (
+          <MessageContent content={msg.content} />
+        )}
         {msg.pending && (
           <span className="text-mist/40 text-[10px]">envoi...</span>
         )}
+        <div className="flex items-center gap-2 flex-wrap">
+          <MessageReactions
+            messageId={msg.id}
+            reactions={reactions}
+            showAddButton={hovered && !msg.pending && !msg.failed}
+          />
+          {hovered && !msg.pending && !msg.failed && !editing && (
+            <MessageActions
+              messageId={msg.id}
+              messageAuthorId={msg.user_id}
+              channelSlug={channelSlug}
+              currentUserId={currentUserId}
+              currentUserRole={currentUserRole}
+              onEdit={isAuthor ? handleStartEdit : undefined}
+            />
+          )}
+        </div>
       </div>
     </div>
   )
@@ -296,7 +330,7 @@ function ThreadInput({
     }
 
     // Inject into the channel messages cache
-    queryClient.setQueryData<InfiniteData>(
+    queryClient.setQueryData<InfiniteMessages>(
       ['community', 'messages', channelSlug],
       (old) => {
         if (!old) return old
@@ -312,7 +346,7 @@ function ThreadInput({
       { channelId, content: trimmed, replyTo: parentMessageId },
       {
         onSuccess: (serverMsg: Message) => {
-          queryClient.setQueryData<InfiniteData>(
+          queryClient.setQueryData<InfiniteMessages>(
             ['community', 'messages', channelSlug],
             (old) => {
               if (!old) return old
@@ -327,7 +361,7 @@ function ThreadInput({
           )
         },
         onError: () => {
-          queryClient.setQueryData<InfiniteData>(
+          queryClient.setQueryData<InfiniteMessages>(
             ['community', 'messages', channelSlug],
             (old) => {
               if (!old) return old
@@ -402,6 +436,7 @@ export default function ThreadPanel({
   onClose,
 }: ThreadPanelProps) {
   const queryClient = useQueryClient()
+  const { data: session } = useSession() as { data: SessionData | null }
   const [mounted, setMounted] = useState(false)
   const repliesEndRef = useRef<HTMLDivElement>(null)
 
@@ -413,7 +448,7 @@ export default function ThreadPanel({
 
   // Get all messages from cache and filter
   const allMessages = (() => {
-    const data = queryClient.getQueryData<InfiniteData>([
+    const data = queryClient.getQueryData<InfiniteMessages>([
       'community',
       'messages',
       channelSlug,
@@ -522,7 +557,13 @@ export default function ThreadPanel({
                   <div className="flex-1 h-px bg-[rgba(255,255,255,0.04)]" />
                 </div>
                 {replies.map((reply) => (
-                  <ThreadReplyRow key={reply.id} msg={reply} />
+                  <ThreadReplyRow
+                    key={reply.id}
+                    msg={reply}
+                    channelSlug={channelSlug}
+                    currentUserId={session?.userId}
+                    currentUserRole={session?.role}
+                  />
                 ))}
                 <div ref={repliesEndRef} className="h-1" />
               </>

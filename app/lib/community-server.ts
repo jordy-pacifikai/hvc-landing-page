@@ -33,6 +33,16 @@ async function supabaseFetch<T = unknown>(
   return { data, error: null }
 }
 
+// --- Role Hierarchy ---
+
+const ROLE_HIERARCHY: Record<string, number> = { member: 0, moderator: 1, admin: 2 }
+
+export function canAccessChannel(userRole: string | undefined, channelMinRole: string): boolean {
+  const userLevel = ROLE_HIERARCHY[userRole || 'member'] ?? 0
+  const requiredLevel = ROLE_HIERARCHY[channelMinRole] ?? 0
+  return userLevel >= requiredLevel
+}
+
 // --- Channels ---
 
 export async function getChannels() {
@@ -123,6 +133,14 @@ export async function deleteMessageById(messageId: string) {
   })
 }
 
+export async function updateMessageContent(messageId: string, content: string) {
+  return supabaseFetch(`hvc_messages?id=eq.${messageId}`, {
+    method: 'PATCH',
+    headers: { Accept: 'application/vnd.pgrst.object+json' },
+    body: JSON.stringify({ content, is_edited: true }),
+  })
+}
+
 // --- Reactions ---
 
 export async function getReactions(messageIds: string[]) {
@@ -183,6 +201,28 @@ export async function getLatestMessageTimes() {
     method: 'POST',
     body: JSON.stringify({}),
   })
+}
+
+export async function getUnreadCounts(userId: string, channelIds: string[]) {
+  // For each channel, count messages newer than last read
+  // Uses individual count queries — acceptable for ~20 channels
+  const reads = await getChannelReads(userId)
+  const readMap = new Map((reads.data || []).map((r) => [r.channel_id, r.last_read_at]))
+
+  const counts: Record<string, number> = {}
+  await Promise.all(
+    channelIds.map(async (channelId) => {
+      const lastRead = readMap.get(channelId)
+      let path = `hvc_messages?channel_id=eq.${channelId}&select=id`
+      if (lastRead) {
+        path += `&created_at=gt.${lastRead}`
+      }
+      path += '&limit=100'
+      const { data } = await supabaseFetch<Array<{ id: string }>>(path)
+      counts[channelId] = data?.length ?? 0
+    })
+  )
+  return counts
 }
 
 // --- Forum Posts ---

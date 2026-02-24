@@ -105,11 +105,10 @@ export default function MessageReactions({
           key={reaction.emoji}
           type="button"
           onClick={() => handleReactionClick(reaction)}
-          disabled={addReaction.isPending || removeReaction.isPending}
           className={[
             'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs',
             'border transition-all duration-150 select-none',
-            'hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed',
+            'hover:scale-105 active:scale-95',
             reaction.has_reacted
               ? 'border-champagne/30 bg-champagne/10 text-champagne'
               : 'border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-mist/70 hover:border-[rgba(255,255,255,0.15)] hover:text-mist',

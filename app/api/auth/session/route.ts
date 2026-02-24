@@ -15,6 +15,7 @@ export async function GET() {
     discordUsername: session.discordUsername,
     discordAvatar: session.discordAvatar,
     isPremium: session.isPremium,
+    role: session.role ?? 'member',
   })
 }
 

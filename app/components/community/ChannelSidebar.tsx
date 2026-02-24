@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useCommunityStore } from '@/app/lib/community-store'
 import ChannelCategory from './ChannelCategory'
 import { useSession } from '@/app/lib/formation-hooks'
@@ -35,10 +36,10 @@ export default function ChannelSidebar() {
   return (
     <>
       <div className="p-4 border-b border-[rgba(99,102,241,0.08)]">
-        <a href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <span className="font-display text-xl font-bold text-ivory">HVC</span>
           <span className="text-xs text-mist bg-[var(--color-slate)] px-2 py-0.5 rounded-full">Community</span>
-        </a>
+        </Link>
       </div>
 
       <div className="flex-1 overflow-y-auto py-2 space-y-1">

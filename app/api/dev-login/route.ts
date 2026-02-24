@@ -13,7 +13,8 @@ export async function GET() {
   session.discordUsername = 'JordyTest'
   session.discordAvatar = null
   session.isPremium = true
+  session.role = 'member'
   await session.save()
 
-  return NextResponse.redirect(new URL('/community', 'http://localhost:3847'))
+  return NextResponse.redirect(new URL('/community', 'http://localhost:3000'))
 }
