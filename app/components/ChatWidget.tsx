@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react'
-import { trackEvent } from '../lib/posthog'
+import { trackEvent, identifyLead } from '../lib/posthog'
 import { trackChatOpened, trackLeadCaptured } from '../lib/analytics'
 import { getStoredUTM } from '../lib/utm'
 
@@ -397,6 +397,7 @@ export default function ChatWidget() {
     localStorage.setItem('hvc_lead_captured', 'true')
     trackEvent('lead_captured', { source: 'chat_widget' })
     trackLeadCaptured('chat_widget')
+    identifyLead(leadData.email, { name: leadData.name, source: 'chat_widget' })
     if (pendingMessage) {
       // User bubble was already added in handleSend — skip adding it again
       sendMessage(pendingMessage, leadData, true)

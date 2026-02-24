@@ -24,7 +24,7 @@ import {
   Mail
 } from 'lucide-react'
 import ChatWidget from './components/ChatWidget'
-import { trackEvent } from './lib/posthog'
+import { trackEvent, identifyLead } from './lib/posthog'
 import { trackNewsletterSignup, trackCheckoutInitiated } from './lib/analytics'
 import { captureUTM, getStoredUTM } from './lib/utm'
 
@@ -36,7 +36,7 @@ const URLS = {
 }
 
 // Hook pour détecter le scroll
-function useScrollReveal() {
+function useScrollReveal(sectionName?: string) {
   const [revealed, setRevealed] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -45,6 +45,9 @@ function useScrollReveal() {
       ([entry]) => {
         if (entry.isIntersecting) {
           setRevealed(true)
+          if (sectionName) {
+            trackEvent('section_viewed', { section: sectionName })
+          }
         }
       },
       { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
@@ -55,7 +58,7 @@ function useScrollReveal() {
     }
 
     return () => observer.disconnect()
-  }, [])
+  }, [sectionName])
 
   return { ref, revealed }
 }
@@ -431,7 +434,7 @@ function Hero() {
 
 // Composant Stats
 function Stats() {
-  const { ref, revealed } = useScrollReveal()
+  const { ref, revealed } = useScrollReveal('stats')
 
   const stats = [
     { value: '15+', label: 'Funded Traders', icon: Award, suffix: '' },
@@ -469,7 +472,7 @@ function Stats() {
 
 // Composant Problème
 function Problem() {
-  const { ref, revealed } = useScrollReveal()
+  const { ref, revealed } = useScrollReveal('problem')
 
   const painPoints = [
     "Tu regardes des vidéos YouTube depuis des mois, mais tu perds toujours de l'argent",
@@ -518,7 +521,7 @@ function Problem() {
 
 // Composant Agitation
 function Agitation() {
-  const { ref, revealed } = useScrollReveal()
+  const { ref, revealed } = useScrollReveal('agitation')
 
   return (
     <section ref={ref} className="py-24 relative">
@@ -559,7 +562,7 @@ function Agitation() {
 
 // Composant Solution
 function Solution() {
-  const { ref, revealed } = useScrollReveal()
+  const { ref, revealed } = useScrollReveal('solution')
 
   const features = [
     {
@@ -637,7 +640,7 @@ function Solution() {
 
 // Composant Témoignages
 function Testimonials() {
-  const { ref, revealed } = useScrollReveal()
+  const { ref, revealed } = useScrollReveal('testimonials')
 
   const testimonials = [
     {
@@ -727,7 +730,7 @@ function Testimonials() {
 
 // Composant Pricing
 function Pricing() {
-  const { ref, revealed } = useScrollReveal()
+  const { ref, revealed } = useScrollReveal('pricing')
   const spotlightRef = useSpotlight()
 
   return (
@@ -793,7 +796,7 @@ function Pricing() {
 
 // Composant Garantie
 function Guarantee() {
-  const { ref, revealed } = useScrollReveal()
+  const { ref, revealed } = useScrollReveal('guarantee')
 
   return (
     <section ref={ref} className="py-20 relative">
@@ -819,7 +822,7 @@ function Guarantee() {
 
 // Composant FAQ
 function FAQ() {
-  const { ref, revealed } = useScrollReveal()
+  const { ref, revealed } = useScrollReveal('faq')
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   const faqs = [
@@ -887,7 +890,7 @@ function FAQ() {
 
 // Composant CTA Final
 function FinalCTA() {
-  const { ref, revealed } = useScrollReveal()
+  const { ref, revealed } = useScrollReveal('final_cta')
 
   return (
     <section ref={ref} className="py-24 relative">
@@ -926,7 +929,7 @@ function FinalCTA() {
 
 // Composant Newsletter
 function Newsletter() {
-  const { ref, revealed } = useScrollReveal()
+  const { ref, revealed } = useScrollReveal('newsletter')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -951,6 +954,7 @@ function Newsletter() {
         setStatus('success')
         trackEvent('newsletter_signup', { source: 'landing_page' })
         trackNewsletterSignup()
+        identifyLead(email, { name, source: 'newsletter' })
       } else {
         setStatus('error')
         setErrorMessage(data.error || 'Une erreur est survenue. Réessaie.')
