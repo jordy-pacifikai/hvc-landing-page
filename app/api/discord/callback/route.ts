@@ -11,9 +11,14 @@ export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code')
   const state = req.nextUrl.searchParams.get('state')
 
+  const getRedirectPath = (s: string | null) => {
+    if (s === 'formation') return '/formation'
+    if (s === 'community') return '/community'
+    return '/'
+  }
+
   if (!code) {
-    const errorRedirect = state === 'formation' ? '/formation?error=discord_cancelled' : '/?error=discord_cancelled'
-    return NextResponse.redirect(new URL(errorRedirect, req.url))
+    return NextResponse.redirect(new URL(`${getRedirectPath(state)}?error=discord_cancelled`, req.url))
   }
 
   try {
@@ -33,8 +38,7 @@ export async function GET(req: NextRequest) {
 
     if (!tokenData.access_token) {
       console.error('[Discord OAuth] Token exchange failed:', tokenData)
-      const errorRedirect = state === 'formation' ? '/formation?error=discord_failed' : '/?error=discord_failed'
-      return NextResponse.redirect(new URL(errorRedirect, req.url))
+      return NextResponse.redirect(new URL(`${getRedirectPath(state)}?error=discord_failed`, req.url))
     }
 
     // Get Discord user info
@@ -44,12 +48,11 @@ export async function GET(req: NextRequest) {
     const user = await userRes.json()
 
     if (!user.id) {
-      const errorRedirect = state === 'formation' ? '/formation?error=discord_no_user' : '/?error=discord_no_user'
-      return NextResponse.redirect(new URL(errorRedirect, req.url))
+      return NextResponse.redirect(new URL(`${getRedirectPath(state)}?error=discord_no_user`, req.url))
     }
 
-    // Formation flow: create session and redirect to /formation
-    if (state === 'formation') {
+    // Session flow: create session and redirect (formation or community)
+    if (state === 'formation' || state === 'community') {
       const isPremium = await hasPremiumRole(user.id)
       const avatar = user.avatar
         ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
@@ -66,7 +69,7 @@ export async function GET(req: NextRequest) {
       session.isPremium = isPremium
       await session.save()
 
-      return NextResponse.redirect(new URL('/formation', req.url))
+      return NextResponse.redirect(new URL(getRedirectPath(state), req.url))
     }
 
     // Default: checkout flow (existing behavior)
@@ -78,7 +81,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(checkoutUrl)
   } catch (error) {
     console.error('[Discord OAuth] Error:', error)
-    const errorRedirect = state === 'formation' ? '/formation?error=discord_error' : '/?error=discord_error'
-    return NextResponse.redirect(new URL(errorRedirect, req.url))
+    return NextResponse.redirect(new URL(`${getRedirectPath(state)}?error=discord_error`, req.url))
   }
 }

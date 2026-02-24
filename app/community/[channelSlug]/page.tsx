@@ -1,0 +1,45 @@
+'use client'
+
+import { use, useEffect } from 'react'
+import { useCommunityStore } from '@/app/lib/community-store'
+import MessageList from '@/app/components/community/MessageList'
+import MessageInput from '@/app/components/community/MessageInput'
+import ForumPostList from '@/app/components/community/ForumPostList'
+import { useSession } from '@/app/lib/formation-hooks'
+
+export default function ChannelPage({ params }: { params: Promise<{ channelSlug: string }> }) {
+  const { channelSlug } = use(params)
+  const { channels, setActiveChannel } = useCommunityStore()
+  const { data: session } = useSession()
+  const channel = channels.find((c) => c.slug === channelSlug)
+
+  useEffect(() => {
+    setActiveChannel(channelSlug)
+  }, [channelSlug, setActiveChannel])
+
+  if (!channel) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-mist">Chargement du channel...</div>
+      </div>
+    )
+  }
+
+  if (channel.channel_type === 'forum') {
+    return <ForumPostList channelSlug={channelSlug} channel={channel} />
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      <MessageList channelSlug={channelSlug} channelId={channel.id} />
+      {!channel.is_readonly && session?.authenticated && (
+        <MessageInput channelId={channel.id} channelSlug={channelSlug} />
+      )}
+      {channel.is_readonly && (
+        <div className="px-4 py-3 bg-[var(--color-obsidian)] border-t border-[rgba(99,102,241,0.08)] text-center text-mist text-sm">
+          Ce channel est en lecture seule.
+        </div>
+      )}
+    </div>
+  )
+}

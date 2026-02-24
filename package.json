@@ -11,13 +11,17 @@
   "dependencies": {
     "@stripe/react-stripe-js": "^5.4.1",
     "@stripe/stripe-js": "^8.6.3",
+    "@supabase/supabase-js": "^2.97.0",
     "@tanstack/react-query": "^5.90.21",
+    "@tanstack/react-virtual": "^3.13.19",
     "iron-session": "^8.0.4",
     "lucide-react": "^0.344.0",
     "next": "^16.1.4",
     "posthog-js": "^1.352.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "zustand": "^5.0.11"
   },
   "devDependencies": {
