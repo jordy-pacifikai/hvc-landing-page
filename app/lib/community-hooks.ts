@@ -37,12 +37,16 @@ export function useMessages(channelSlug: string) {
       return lastPage.messages[lastPage.messages.length - 1].created_at
     },
     enabled: !!channelSlug,
-    staleTime: 10_000,
+    staleTime: 0, // Always refetch when invalidated
+    refetchOnWindowFocus: false, // Don't refetch on tab switch (would flicker optimistic messages)
+    // Fallback polling every 5s — ensures new messages from other users appear
+    // even if Supabase Realtime postgres_changes requires a paid plan
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false, // Only poll when tab is active
   })
 }
 
 export function useSendMessage() {
-  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({
       channelId,
@@ -55,10 +59,8 @@ export function useSendMessage() {
       replyTo?: string
       imageUrl?: string
     }) => sendMessage(channelId, content, replyTo, imageUrl),
-    onSuccess: () => {
-      // Messages will be added via Realtime subscription, but invalidate to be safe
-      queryClient.invalidateQueries({ queryKey: ['community', 'messages'] })
-    },
+    // No global onSuccess invalidation — MessageInput handles optimistic updates directly.
+    // Invalidation here would race against the optimistic setQueryData and cause message flicker.
   })
 }
 
