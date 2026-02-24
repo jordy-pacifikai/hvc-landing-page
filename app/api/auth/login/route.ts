@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server'
 
 const DISCORD_CLIENT_ID = '988148432843735073'
-const REDIRECT_URI = process.env.NODE_ENV === 'production'
-  ? 'https://www.highvaluecapital.club/api/auth/discord/callback'
-  : 'http://localhost:3000/api/auth/discord/callback'
+// Use the existing registered redirect URI
+const REDIRECT_URI = 'https://www.highvaluecapital.club/api/discord/callback'
 
 export async function GET() {
   const params = new URLSearchParams({
@@ -11,6 +10,7 @@ export async function GET() {
     redirect_uri: REDIRECT_URI,
     response_type: 'code',
     scope: 'identify guilds.members.read',
+    state: 'formation', // tells the callback to create a session and redirect to /formation
   })
 
   return NextResponse.redirect(`https://discord.com/api/oauth2/authorize?${params}`)

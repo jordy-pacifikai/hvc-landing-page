@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getSession } from '@/app/lib/session'
+import { upsertUser } from '@/app/lib/supabase-server'
+import { hasPremiumRole } from '@/app/lib/discord-api'
 
 const DISCORD_CLIENT_ID = '988148432843735073'
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!
@@ -6,9 +9,11 @@ const REDIRECT_URI = 'https://www.highvaluecapital.club/api/discord/callback'
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code')
+  const state = req.nextUrl.searchParams.get('state')
 
   if (!code) {
-    return NextResponse.redirect(new URL('/?error=discord_cancelled', req.url))
+    const errorRedirect = state === 'formation' ? '/formation?error=discord_cancelled' : '/?error=discord_cancelled'
+    return NextResponse.redirect(new URL(errorRedirect, req.url))
   }
 
   try {
@@ -28,7 +33,8 @@ export async function GET(req: NextRequest) {
 
     if (!tokenData.access_token) {
       console.error('[Discord OAuth] Token exchange failed:', tokenData)
-      return NextResponse.redirect(new URL('/?error=discord_failed', req.url))
+      const errorRedirect = state === 'formation' ? '/formation?error=discord_failed' : '/?error=discord_failed'
+      return NextResponse.redirect(new URL(errorRedirect, req.url))
     }
 
     // Get Discord user info
@@ -38,10 +44,32 @@ export async function GET(req: NextRequest) {
     const user = await userRes.json()
 
     if (!user.id) {
-      return NextResponse.redirect(new URL('/?error=discord_no_user', req.url))
+      const errorRedirect = state === 'formation' ? '/formation?error=discord_no_user' : '/?error=discord_no_user'
+      return NextResponse.redirect(new URL(errorRedirect, req.url))
     }
 
-    // Redirect to checkout with Discord info
+    // Formation flow: create session and redirect to /formation
+    if (state === 'formation') {
+      const isPremium = await hasPremiumRole(user.id)
+      const avatar = user.avatar
+        ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+        : null
+
+      const { data: userData } = await upsertUser(user.id, user.username, avatar, isPremium)
+      const supabaseUser = Array.isArray(userData) ? userData[0] : userData
+
+      const session = await getSession()
+      session.userId = supabaseUser?.id || user.id
+      session.discordId = user.id
+      session.discordUsername = user.username
+      session.discordAvatar = avatar
+      session.isPremium = isPremium
+      await session.save()
+
+      return NextResponse.redirect(new URL('/formation', req.url))
+    }
+
+    // Default: checkout flow (existing behavior)
     const checkoutUrl = new URL('/checkout', req.url)
     checkoutUrl.searchParams.set('discord_id', user.id)
     checkoutUrl.searchParams.set('discord_username', user.username)
@@ -50,6 +78,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(checkoutUrl)
   } catch (error) {
     console.error('[Discord OAuth] Error:', error)
-    return NextResponse.redirect(new URL('/?error=discord_error', req.url))
+    const errorRedirect = state === 'formation' ? '/formation?error=discord_error' : '/?error=discord_error'
+    return NextResponse.redirect(new URL(errorRedirect, req.url))
   }
 }
