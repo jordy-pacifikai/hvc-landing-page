@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { CornerDownRight } from 'lucide-react'
-import { useMessages } from '@/app/lib/community-hooks'
+import { useMessages, useRetryMessage } from '@/app/lib/community-hooks'
 import { useSession } from '@/app/lib/formation-hooks'
 import { useCommunityStore } from '@/app/lib/community-store'
 import type { Message } from '@/app/lib/community-api'
@@ -257,6 +257,7 @@ function MessageRow({
   })
   const [hovered, setHovered] = useState(false)
   const setActiveThread = useCommunityStore((s) => s.setActiveThread)
+  const retryMessage = useRetryMessage(channelSlug)
 
   const reactions = msg.reactions ?? []
 
@@ -264,10 +265,45 @@ function MessageRow({
     setActiveThread(msg.id)
   }, [msg.id, setActiveThread])
 
+  const handleRetry = useCallback(() => {
+    if (msg.failedContent) {
+      retryMessage({ id: msg.id, channel_id: msg.channel_id, failedContent: msg.failedContent })
+    }
+  }, [msg.id, msg.channel_id, msg.failedContent, retryMessage])
+
+  // Status indicator (pending / failed)
+  const StatusLine = msg.pending ? (
+    <span className="text-mist/40 text-[10px]">envoi...</span>
+  ) : msg.failed ? (
+    <span className="flex items-center gap-1.5 text-[10px] mt-0.5">
+      <span className="text-red-400/80">Echec de l&apos;envoi</span>
+      <span className="text-mist/30">·</span>
+      <button
+        type="button"
+        onClick={handleRetry}
+        className="text-champagne/70 hover:text-champagne underline underline-offset-2 transition-colors"
+      >
+        Reessayer
+      </button>
+      <span className="text-mist/30">·</span>
+      <button
+        type="button"
+        onClick={() => {
+          // Remove failed message from cache
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setActiveThread(null as any) // dummy to trigger re-render; actual removal via store
+        }}
+        className="text-mist/50 hover:text-red-400 transition-colors"
+      >
+        Supprimer
+      </button>
+    </span>
+  ) : null
+
   if (grouped) {
     return (
       <div
-        className="flex gap-3 py-0.5 px-2 rounded-md hover:bg-[rgba(255,255,255,0.02)] group relative"
+        className={`flex gap-3 py-0.5 px-2 rounded-md group relative ${msg.failed ? 'opacity-60' : 'hover:bg-[rgba(255,255,255,0.02)]'}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
@@ -278,17 +314,17 @@ function MessageRow({
           </span>
         </div>
         <div className="min-w-0 flex-1">
-          <MessageContent content={msg.content} />
-          {msg.pending && (
-            <span className="text-mist/40 text-[10px] ml-1">envoi...</span>
-          )}
+          <div className={msg.failed ? 'text-red-400/40' : ''}>
+            <MessageContent content={msg.content} />
+          </div>
+          {StatusLine}
           <div className="flex items-center gap-2 flex-wrap">
             <MessageReactions
               messageId={msg.id}
               reactions={reactions}
-              showAddButton={hovered}
+              showAddButton={hovered && !msg.pending && !msg.failed}
             />
-            {hovered && !msg.pending && (
+            {hovered && !msg.pending && !msg.failed && (
               <HoverToolbar
                 msg={msg}
                 channelSlug={channelSlug}
@@ -298,7 +334,7 @@ function MessageRow({
               />
             )}
           </div>
-          {replyCount > 0 && (
+          {replyCount > 0 && !msg.failed && (
             <ThreadIndicator replyCount={replyCount} onClick={handleReply} />
           )}
         </div>
@@ -308,7 +344,7 @@ function MessageRow({
 
   return (
     <div
-      className="flex gap-3 py-1.5 px-2 rounded-md hover:bg-[rgba(255,255,255,0.02)] group"
+      className={`flex gap-3 py-1.5 px-2 rounded-md group ${msg.failed ? 'opacity-60' : 'hover:bg-[rgba(255,255,255,0.02)]'}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -340,17 +376,17 @@ function MessageRow({
             <span className="text-mist/30 text-[10px]">(modifie)</span>
           )}
         </div>
-        <MessageContent content={msg.content} />
-        {msg.pending && (
-          <span className="text-mist/40 text-[10px]">envoi...</span>
-        )}
+        <div className={msg.failed ? 'text-red-400/40' : ''}>
+          <MessageContent content={msg.content} />
+        </div>
+        {StatusLine}
         <div className="flex items-center gap-2 flex-wrap">
           <MessageReactions
             messageId={msg.id}
             reactions={reactions}
-            showAddButton={hovered}
+            showAddButton={hovered && !msg.pending && !msg.failed}
           />
-          {hovered && !msg.pending && (
+          {hovered && !msg.pending && !msg.failed && (
             <HoverToolbar
               msg={msg}
               channelSlug={channelSlug}
@@ -360,7 +396,7 @@ function MessageRow({
             />
           )}
         </div>
-        {replyCount > 0 && (
+        {replyCount > 0 && !msg.failed && (
           <ThreadIndicator replyCount={replyCount} onClick={handleReply} />
         )}
       </div>

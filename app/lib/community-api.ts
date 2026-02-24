@@ -12,6 +12,8 @@ export interface Message {
   reply_to: string | null
   created_at: string
   pending?: boolean
+  failed?: boolean
+  failedContent?: string // original content for retry
   user?: {
     id: string
     discord_id: string

@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 import {
   fetchChannels,
@@ -62,6 +63,71 @@ export function useSendMessage() {
     // No global onSuccess invalidation — MessageInput handles optimistic updates directly.
     // Invalidation here would race against the optimistic setQueryData and cause message flicker.
   })
+}
+
+// Retry a failed message: marks it pending again, resends, updates or marks failed
+export function useRetryMessage(channelSlug: string) {
+  const queryClient = useQueryClient()
+  const { mutate: send } = useSendMessage()
+
+  return useCallback((failedMsg: { id: string; channel_id: string; failedContent: string }) => {
+    // Set back to pending
+    queryClient.setQueryData<{ pages: { messages: import('./community-api').Message[]; hasMore: boolean }[]; pageParams: unknown[] }>(
+      ['community', 'messages', channelSlug],
+      (old) => {
+        if (!old) return old
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            messages: page.messages.map((m) =>
+              m.id === failedMsg.id ? { ...m, pending: true, failed: false } : m
+            ),
+          })),
+        }
+      }
+    )
+
+    send(
+      { channelId: failedMsg.channel_id, content: failedMsg.failedContent },
+      {
+        onSuccess: (serverMsg) => {
+          queryClient.setQueryData<{ pages: { messages: import('./community-api').Message[]; hasMore: boolean }[]; pageParams: unknown[] }>(
+            ['community', 'messages', channelSlug],
+            (old) => {
+              if (!old) return old
+              return {
+                ...old,
+                pages: old.pages.map((page) => ({
+                  ...page,
+                  messages: page.messages.map((m) =>
+                    m.id === failedMsg.id ? { ...serverMsg, pending: false, failed: false } : m
+                  ),
+                })),
+              }
+            }
+          )
+        },
+        onError: () => {
+          queryClient.setQueryData<{ pages: { messages: import('./community-api').Message[]; hasMore: boolean }[]; pageParams: unknown[] }>(
+            ['community', 'messages', channelSlug],
+            (old) => {
+              if (!old) return old
+              return {
+                ...old,
+                pages: old.pages.map((page) => ({
+                  ...page,
+                  messages: page.messages.map((m) =>
+                    m.id === failedMsg.id ? { ...m, pending: false, failed: true } : m
+                  ),
+                })),
+              }
+            }
+          )
+        },
+      }
+    )
+  }, [queryClient, channelSlug, send])
 }
 
 export function useDeleteMessage() {

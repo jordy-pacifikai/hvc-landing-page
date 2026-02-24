@@ -51,7 +51,6 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [sendError, setSendError] = useState<string | null>(null)
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -121,8 +120,6 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
   const handleSend = useCallback(async () => {
     const trimmed = content.trim()
     if ((!trimmed && !pendingImage) || isPending || isUploading) return
-
-    setSendError(null)
 
     // Upload image first if present
     let uploadedUrl: string | undefined
@@ -199,23 +196,23 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
           )
         },
         onError: () => {
-          // Remove optimistic message
+          // Mark message as failed inline (Discord/Slack pattern)
+          // Don't remove it — let the user retry from the message itself
           queryClient.setQueryData<InfiniteData>(
             ['community', 'messages', channelSlug],
             (old) => {
               if (!old) return old
               const pages = old.pages.map((page) => ({
                 ...page,
-                messages: page.messages.filter((m) => m.id !== tempId),
+                messages: page.messages.map((m) =>
+                  m.id === tempId
+                    ? { ...m, pending: false, failed: true, failedContent: trimmed }
+                    : m
+                ),
               }))
               return { ...old, pages }
             }
           )
-          // Restore text + show error
-          setContent(trimmed)
-          setSendError("Echec de l'envoi. Verifie ta connexion et reessaie.")
-          // Auto-clear error after 5s
-          setTimeout(() => setSendError(null), 5000)
         },
       }
     )
@@ -276,13 +273,6 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
       {/* Upload error */}
       {uploadError && (
         <p className="text-red-400/80 text-xs px-2 mb-1.5">{uploadError}</p>
-      )}
-
-      {/* Send error */}
-      {sendError && (
-        <div className="flex items-center gap-2 px-2 mb-1.5 py-1.5 rounded-md bg-red-500/10 border border-red-500/20">
-          <span className="text-red-400 text-xs">{sendError}</span>
-        </div>
       )}
 
       {/* Input row */}

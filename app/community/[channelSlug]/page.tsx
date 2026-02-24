@@ -22,7 +22,7 @@ export default function ChannelPage({ params }: { params: Promise<{ channelSlug:
   const { mutate: markRead } = useMarkChannelRead()
 
   // Subscribe to realtime messages for this channel
-  useCommunityRealtime(channel?.id ?? null)
+  const { status: realtimeStatus } = useCommunityRealtime(channel?.id ?? null)
 
   useEffect(() => {
     setActiveChannel(channelSlug)
@@ -56,6 +56,12 @@ export default function ChannelPage({ params }: { params: Promise<{ channelSlug:
     <div className="flex h-full min-h-0">
       {/* Main chat area */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
+        {/* Realtime connection banner — only show when actually disconnected (not on initial connect) */}
+        {realtimeStatus === 'disconnected' && (
+          <div className="flex items-center justify-between px-4 py-1.5 bg-amber-500/10 border-b border-amber-500/20 text-xs text-amber-400/90 shrink-0">
+            <span>Connexion temps reel perdue — les nouveaux messages s&apos;actualisent toutes les 5s</span>
+          </div>
+        )}
         <MessageList channelSlug={channelSlug} channelId={channel.id} />
         <TypingIndicator channelId={channel.id} />
         {!channel.is_readonly && session?.authenticated && (

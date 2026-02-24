@@ -1,18 +1,26 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from './supabase-client'
 import { useCommunityStore } from './community-store'
 import type { Message } from './community-api'
 import { useQueryClient } from '@tanstack/react-query'
 
+export type RealtimeStatus = 'connecting' | 'connected' | 'disconnected'
+
 export function useCommunityRealtime(channelId: string | null) {
   const queryClient = useQueryClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channelRef = useRef<any>(null)
+  const [status, setStatus] = useState<RealtimeStatus>('connecting')
 
   useEffect(() => {
-    if (!channelId || !supabase) return
+    if (!channelId || !supabase) {
+      setStatus('disconnected')
+      return
+    }
+
+    setStatus('connecting')
 
     // Subscribe to new messages in this channel
     const channel = supabase
@@ -26,7 +34,6 @@ export function useCommunityRealtime(channelId: string | null) {
           filter: `channel_id=eq.${channelId}`,
         },
         () => {
-          // Add new message to cache
           queryClient.invalidateQueries({ queryKey: ['community', 'messages'] })
         }
       )
@@ -42,7 +49,11 @@ export function useCommunityRealtime(channelId: string | null) {
           queryClient.invalidateQueries({ queryKey: ['community', 'messages'] })
         }
       )
-      .subscribe()
+      .subscribe((s) => {
+        if (s === 'SUBSCRIBED') setStatus('connected')
+        else if (s === 'CLOSED' || s === 'CHANNEL_ERROR') setStatus('disconnected')
+        else setStatus('connecting')
+      })
 
     channelRef.current = channel
 
@@ -50,8 +61,11 @@ export function useCommunityRealtime(channelId: string | null) {
       if (channelRef.current && supabase) {
         supabase.removeChannel(channelRef.current)
       }
+      setStatus('disconnected')
     }
   }, [channelId, queryClient])
+
+  return { status }
 }
 
 export function useTypingBroadcast(channelId: string | null) {
