@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from '@/app/lib/session'
+import { getSessionWithPremium as getSession } from '@/app/lib/session'
 import { addReactionDb, removeReactionDb } from '@/app/lib/community-server'
 
 export async function POST(request: NextRequest) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from '@/app/lib/session'
+import { getSessionWithPremium as getSession } from '@/app/lib/session'
 import { getMessages, createMessage, deleteMessageById, getChannelBySlug, getChannelById, getMessageById, createNotification } from '@/app/lib/community-server'
 
 const MAX_MESSAGE_LENGTH = 2000
