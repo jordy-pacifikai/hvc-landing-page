@@ -193,10 +193,9 @@ export async function upsertChannelRead(userId: string, channelId: string) {
 // --- Unread Counts ---
 
 export async function getLatestMessageTimes() {
-  // Get the latest message time per channel
   return supabaseFetch<Array<{
     channel_id: string
-    latest: string
+    latest_at: string
   }>>('rpc/get_latest_message_times', {
     method: 'POST',
     body: JSON.stringify({}),
