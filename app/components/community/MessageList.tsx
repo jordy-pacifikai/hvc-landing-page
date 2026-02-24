@@ -3,7 +3,9 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { CornerDownRight } from 'lucide-react'
 import { useMessages } from '@/app/lib/community-hooks'
+import { useCommunityStore } from '@/app/lib/community-store'
 import type { Message } from '@/app/lib/community-api'
 import MessageReactions from './MessageReactions'
 
@@ -144,22 +146,80 @@ function MessageContent({ content }: { content: string }) {
   )
 }
 
+// --- ReplyButton (hover action) ---
+
+function ReplyButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title="Repondre dans un fil"
+      className="
+        inline-flex items-center gap-1 px-2 py-1 rounded-md
+        text-mist/40 hover:text-mist/80
+        hover:bg-[rgba(255,255,255,0.06)]
+        border border-transparent hover:border-[rgba(255,255,255,0.08)]
+        transition-all duration-150 text-[10px] font-medium
+        active:scale-95
+      "
+    >
+      <CornerDownRight className="w-3 h-3" />
+      <span>Repondre</span>
+    </button>
+  )
+}
+
+// --- ThreadIndicator (shown below messages with replies) ---
+
+function ThreadIndicator({
+  replyCount,
+  onClick,
+}: {
+  replyCount: number
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="
+        mt-1 inline-flex items-center gap-1.5
+        text-mist/50 hover:text-champagne/80
+        text-[11px] font-medium
+        transition-colors duration-150
+        group
+      "
+    >
+      <CornerDownRight className="w-3 h-3 text-mist/40 group-hover:text-champagne/60 transition-colors" />
+      <span>
+        {replyCount} reponse{replyCount > 1 ? 's' : ''} &rsaquo;
+      </span>
+    </button>
+  )
+}
+
 // --- MessageRow ---
 
 interface MessageRowProps {
   msg: Message
   grouped: boolean
+  replyCount?: number
 }
 
-function MessageRow({ msg, grouped }: MessageRowProps) {
+function MessageRow({ msg, grouped, replyCount = 0 }: MessageRowProps) {
   const avatarUrl = getAvatarUrl(msg.user)
   const time = new Date(msg.created_at).toLocaleTimeString('fr-FR', {
     hour: '2-digit',
     minute: '2-digit',
   })
   const [hovered, setHovered] = useState(false)
+  const { setActiveThread } = useCommunityStore()
 
   const reactions = msg.reactions ?? []
+
+  const handleReply = useCallback(() => {
+    setActiveThread(msg.id)
+  }, [msg.id, setActiveThread])
 
   if (grouped) {
     return (
@@ -179,11 +239,19 @@ function MessageRow({ msg, grouped }: MessageRowProps) {
           {msg.pending && (
             <span className="text-mist/40 text-[10px] ml-1">envoi...</span>
           )}
-          <MessageReactions
-            messageId={msg.id}
-            reactions={reactions}
-            showAddButton={hovered}
-          />
+          <div className="flex items-center gap-2 flex-wrap">
+            <MessageReactions
+              messageId={msg.id}
+              reactions={reactions}
+              showAddButton={hovered}
+            />
+            {hovered && !msg.pending && (
+              <ReplyButton onClick={handleReply} />
+            )}
+          </div>
+          {replyCount > 0 && (
+            <ThreadIndicator replyCount={replyCount} onClick={handleReply} />
+          )}
         </div>
       </div>
     )
@@ -220,18 +288,26 @@ function MessageRow({ msg, grouped }: MessageRowProps) {
           )}
           <span className="text-mist/50 text-xs">{time}</span>
           {msg.is_edited && (
-            <span className="text-mist/30 text-[10px]">(modifié)</span>
+            <span className="text-mist/30 text-[10px]">(modifie)</span>
           )}
         </div>
         <MessageContent content={msg.content} />
         {msg.pending && (
           <span className="text-mist/40 text-[10px]">envoi...</span>
         )}
-        <MessageReactions
-          messageId={msg.id}
-          reactions={reactions}
-          showAddButton={hovered}
-        />
+        <div className="flex items-center gap-2 flex-wrap">
+          <MessageReactions
+            messageId={msg.id}
+            reactions={reactions}
+            showAddButton={hovered}
+          />
+          {hovered && !msg.pending && (
+            <ReplyButton onClick={handleReply} />
+          )}
+        </div>
+        {replyCount > 0 && (
+          <ThreadIndicator replyCount={replyCount} onClick={handleReply} />
+        )}
       </div>
     </div>
   )
@@ -251,6 +327,15 @@ export default function MessageList({ channelSlug }: MessageListProps) {
   const messages: Message[] = data?.pages
     ? [...data.pages].reverse().flatMap((p: { messages: Message[] }) => p.messages)
     : []
+
+  // Build a reply count map: parentId -> count of replies
+  // Only count top-level messages (reply_to !== null) that aren't themselves pending
+  const replyCountMap = messages.reduce<Record<string, number>>((acc, msg) => {
+    if (msg.reply_to && !msg.pending) {
+      acc[msg.reply_to] = (acc[msg.reply_to] ?? 0) + 1
+    }
+    return acc
+  }, {})
 
   // Track if user is near bottom
   const handleScroll = useCallback(() => {
@@ -328,16 +413,19 @@ export default function MessageList({ channelSlug }: MessageListProps) {
     )
   }
 
-  // --- Build render list with date separators and grouping ---
+  // --- Build render list: only top-level messages (no reply_to) ---
+  // Replies are hidden from the main list — they live in ThreadPanel
+  const topLevelMessages = messages.filter((m) => !m.reply_to)
+
   type RenderItem =
     | { type: 'separator'; key: string; label: string }
     | { type: 'message'; key: string; msg: Message; grouped: boolean }
 
   const items: RenderItem[] = []
 
-  for (let i = 0; i < messages.length; i++) {
-    const msg = messages[i]
-    const prev = messages[i - 1]
+  for (let i = 0; i < topLevelMessages.length; i++) {
+    const msg = topLevelMessages[i]
+    const prev = topLevelMessages[i - 1]
 
     // Date separator
     if (!prev || !isSameDay(prev.created_at, msg.created_at)) {
@@ -385,7 +473,12 @@ export default function MessageList({ channelSlug }: MessageListProps) {
         item.type === 'separator' ? (
           <DateSeparator key={item.key} label={item.label} />
         ) : (
-          <MessageRow key={item.key} msg={item.msg} grouped={item.grouped} />
+          <MessageRow
+            key={item.key}
+            msg={item.msg}
+            grouped={item.grouped}
+            replyCount={replyCountMap[item.msg.id] ?? 0}
+          />
         )
       )}
 

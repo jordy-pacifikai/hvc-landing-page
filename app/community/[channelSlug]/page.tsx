@@ -6,13 +6,14 @@ import MessageList from '@/app/components/community/MessageList'
 import MessageInput from '@/app/components/community/MessageInput'
 import ForumPostList from '@/app/components/community/ForumPostList'
 import TypingIndicator from '@/app/components/community/TypingIndicator'
+import ThreadPanel from '@/app/components/community/ThreadPanel'
 import { useSession } from '@/app/lib/formation-hooks'
 import { useCommunityRealtime } from '@/app/lib/community-realtime'
 import { useMarkChannelRead } from '@/app/lib/community-hooks'
 
 export default function ChannelPage({ params }: { params: Promise<{ channelSlug: string }> }) {
   const { channelSlug } = use(params)
-  const { channels, setActiveChannel } = useCommunityStore()
+  const { channels, setActiveChannel, activeThread, setActiveThread } = useCommunityStore()
   const { data: session } = useSession()
   const channel = channels.find((c) => c.slug === channelSlug)
   const { mutate: markRead } = useMarkChannelRead()
@@ -23,6 +24,11 @@ export default function ChannelPage({ params }: { params: Promise<{ channelSlug:
   useEffect(() => {
     setActiveChannel(channelSlug)
   }, [channelSlug, setActiveChannel])
+
+  // Close thread when switching channels
+  useEffect(() => {
+    setActiveThread(null)
+  }, [channelSlug, setActiveThread])
 
   // Auto mark-as-read when the user opens a channel
   useEffect(() => {
@@ -44,16 +50,29 @@ export default function ChannelPage({ params }: { params: Promise<{ channelSlug:
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <MessageList channelSlug={channelSlug} channelId={channel.id} />
-      <TypingIndicator channelId={channel.id} />
-      {!channel.is_readonly && session?.authenticated && (
-        <MessageInput channelId={channel.id} channelSlug={channelSlug} />
-      )}
-      {channel.is_readonly && (
-        <div className="px-4 py-3 bg-[var(--color-obsidian)] border-t border-[rgba(99,102,241,0.08)] text-center text-mist text-sm">
-          Ce channel est en lecture seule.
-        </div>
+    <div className="flex h-full min-h-0">
+      {/* Main chat area */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+        <MessageList channelSlug={channelSlug} channelId={channel.id} />
+        <TypingIndicator channelId={channel.id} />
+        {!channel.is_readonly && session?.authenticated && (
+          <MessageInput channelId={channel.id} channelSlug={channelSlug} />
+        )}
+        {channel.is_readonly && (
+          <div className="px-4 py-3 bg-[var(--color-obsidian)] border-t border-[rgba(99,102,241,0.08)] text-center text-mist text-sm">
+            Ce channel est en lecture seule.
+          </div>
+        )}
+      </div>
+
+      {/* Thread panel — slides in from right when a message thread is opened */}
+      {activeThread && (
+        <ThreadPanel
+          messageId={activeThread}
+          channelId={channel.id}
+          channelSlug={channelSlug}
+          onClose={() => setActiveThread(null)}
+        />
       )}
     </div>
   )
