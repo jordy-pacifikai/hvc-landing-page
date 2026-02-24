@@ -39,13 +39,20 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
-  const { channelId, content, replyTo } = body
+  const { channelId, content, replyTo, imageUrl } = body
 
-  if (!channelId || !content?.trim()) {
+  // Allow empty content if an image is provided
+  if (!channelId || (!content?.trim() && !imageUrl)) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
   }
 
-  const { data, error } = await createMessage(channelId, session.userId, content.trim(), replyTo)
+  const { data, error } = await createMessage(
+    channelId,
+    session.userId,
+    content?.trim() ?? '',
+    replyTo,
+    imageUrl
+  )
   if (error) {
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
   }

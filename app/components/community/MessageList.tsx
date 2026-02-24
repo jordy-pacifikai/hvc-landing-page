@@ -5,9 +5,11 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { CornerDownRight } from 'lucide-react'
 import { useMessages } from '@/app/lib/community-hooks'
+import { useSession } from '@/app/lib/formation-hooks'
 import { useCommunityStore } from '@/app/lib/community-store'
 import type { Message } from '@/app/lib/community-api'
 import MessageReactions from './MessageReactions'
+import MessageActions from './MessageActions'
 
 interface MessageListProps {
   channelSlug: string
@@ -198,15 +200,56 @@ function ThreadIndicator({
   )
 }
 
+// --- HoverToolbar ---
+
+interface HoverToolbarProps {
+  msg: Message
+  channelSlug: string
+  currentUserId: string | undefined
+  currentUserRole: string | undefined
+  onReply: () => void
+}
+
+function HoverToolbar({
+  msg,
+  channelSlug,
+  currentUserId,
+  currentUserRole,
+  onReply,
+}: HoverToolbarProps) {
+  return (
+    <div className="flex items-center gap-0.5">
+      <ReplyButton onClick={onReply} />
+      <MessageActions
+        messageId={msg.id}
+        messageAuthorId={msg.user_id}
+        channelSlug={channelSlug}
+        currentUserId={currentUserId}
+        currentUserRole={currentUserRole}
+      />
+    </div>
+  )
+}
+
 // --- MessageRow ---
 
 interface MessageRowProps {
   msg: Message
   grouped: boolean
   replyCount?: number
+  channelSlug: string
+  currentUserId: string | undefined
+  currentUserRole: string | undefined
 }
 
-function MessageRow({ msg, grouped, replyCount = 0 }: MessageRowProps) {
+function MessageRow({
+  msg,
+  grouped,
+  replyCount = 0,
+  channelSlug,
+  currentUserId,
+  currentUserRole,
+}: MessageRowProps) {
   const avatarUrl = getAvatarUrl(msg.user)
   const time = new Date(msg.created_at).toLocaleTimeString('fr-FR', {
     hour: '2-digit',
@@ -246,7 +289,13 @@ function MessageRow({ msg, grouped, replyCount = 0 }: MessageRowProps) {
               showAddButton={hovered}
             />
             {hovered && !msg.pending && (
-              <ReplyButton onClick={handleReply} />
+              <HoverToolbar
+                msg={msg}
+                channelSlug={channelSlug}
+                currentUserId={currentUserId}
+                currentUserRole={currentUserRole}
+                onReply={handleReply}
+              />
             )}
           </div>
           {replyCount > 0 && (
@@ -302,7 +351,13 @@ function MessageRow({ msg, grouped, replyCount = 0 }: MessageRowProps) {
             showAddButton={hovered}
           />
           {hovered && !msg.pending && (
-            <ReplyButton onClick={handleReply} />
+            <HoverToolbar
+              msg={msg}
+              channelSlug={channelSlug}
+              currentUserId={currentUserId}
+              currentUserRole={currentUserRole}
+              onReply={handleReply}
+            />
           )}
         </div>
         {replyCount > 0 && (
@@ -317,6 +372,11 @@ function MessageRow({ msg, grouped, replyCount = 0 }: MessageRowProps) {
 
 export default function MessageList({ channelSlug }: MessageListProps) {
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useMessages(channelSlug)
+  const { data: session } = useSession()
+
+  // Extract current user identity for moderation checks
+  const currentUserId: string | undefined = session?.userId ?? session?.user?.id
+  const currentUserRole: string | undefined = session?.role ?? session?.user?.role
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -478,6 +538,9 @@ export default function MessageList({ channelSlug }: MessageListProps) {
             msg={item.msg}
             grouped={item.grouped}
             replyCount={replyCountMap[item.msg.id] ?? 0}
+            channelSlug={channelSlug}
+            currentUserId={currentUserId}
+            currentUserRole={currentUserRole}
           />
         )
       )}

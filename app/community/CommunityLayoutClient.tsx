@@ -15,6 +15,13 @@ export default function CommunityLayoutClient({ children }: { children: React.Re
   const { data: channels } = useChannels()
   const { setChannels } = useCommunityStore()
 
+  // Register service worker
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {})
+    }
+  }, [])
+
   useEffect(() => {
     if (channels) {
       setChannels(channels)

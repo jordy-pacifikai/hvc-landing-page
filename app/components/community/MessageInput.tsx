@@ -1,29 +1,17 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
-import { Send } from 'lucide-react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { Send, ImagePlus, X } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSendMessage } from '@/app/lib/community-hooks'
 import { useSession } from '@/app/lib/formation-hooks'
+import { uploadImage } from '@/app/lib/community-api'
 import type { Message } from '@/app/lib/community-api'
 
 interface MessageInputProps {
   channelId: string
   channelSlug: string
 }
-
-// Phase 2b — typing broadcast stub (Supabase Realtime)
-// function useTypingBroadcast(channelId: string) {
-//   const supabase = useSupabaseClient()
-//   const broadcastTyping = useCallback(() => {
-//     supabase.channel(`typing:${channelId}`).send({
-//       type: 'broadcast',
-//       event: 'typing',
-//       payload: {},
-//     })
-//   }, [supabase, channelId])
-//   return { broadcastTyping }
-// }
 
 type SessionData = {
   authenticated: boolean
@@ -39,19 +27,117 @@ type InfiniteData = {
   pageParams: unknown[]
 }
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+
+// --- Image preview shimmer skeleton ---
+
+function ImageUploadSkeleton() {
+  return (
+    <div
+      className="rounded-lg w-40 h-28 shrink-0"
+      style={{
+        background: 'linear-gradient(90deg, var(--color-charcoal) 25%, var(--color-slate) 37%, var(--color-charcoal) 63%)',
+        backgroundSize: '800px 100%',
+        animation: 'shimmer 1.8s ease-in-out infinite',
+      }}
+    />
+  )
+}
+
 export default function MessageInput({ channelId, channelSlug }: MessageInputProps) {
   const [content, setContent] = useState('')
+  const [pendingImage, setPendingImage] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const queryClient = useQueryClient()
   const { mutate: send, isPending } = useSendMessage()
   const { data: session } = useSession() as { data: SessionData | null }
 
-  const handleSend = useCallback(() => {
-    const trimmed = content.trim()
-    if (!trimmed || isPending) return
+  // Cleanup object URL on unmount or when preview changes
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+    }
+  }, [previewUrl])
 
-    // Clear input immediately for better UX
+  const validateFile = (file: File): string | null => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return 'Format non supporte. Formats acceptes : JPEG, PNG, GIF, WebP'
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return 'Image trop volumineuse. Taille maximale : 5 MB'
+    }
+    return null
+  }
+
+  const attachFile = useCallback((file: File) => {
+    const err = validateFile(file)
+    if (err) {
+      setUploadError(err)
+      return
+    }
+    setUploadError(null)
+    // Revoke previous preview
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPendingImage(file)
+    setPreviewUrl(URL.createObjectURL(file))
+  }, [previewUrl])
+
+  const removeImage = useCallback(() => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPendingImage(null)
+    setPreviewUrl(null)
+    setUploadError(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }, [previewUrl])
+
+  // Paste support
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (const item of Array.from(items)) {
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const file = item.getAsFile()
+        if (file) {
+          e.preventDefault()
+          attachFile(file)
+          break
+        }
+      }
+    }
+  }, [attachFile])
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) attachFile(file)
+  }
+
+  const handleSend = useCallback(async () => {
+    const trimmed = content.trim()
+    if ((!trimmed && !pendingImage) || isPending || isUploading) return
+
+    // Upload image first if present
+    let uploadedUrl: string | undefined
+    if (pendingImage) {
+      setIsUploading(true)
+      try {
+        uploadedUrl = await uploadImage(pendingImage)
+      } catch {
+        setUploadError('Echec du telechargement. Reessaie.')
+        setIsUploading(false)
+        return
+      }
+      setIsUploading(false)
+    }
+
+    // Clear input state immediately for UX
     setContent('')
+    removeImage()
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
     }
@@ -63,7 +149,7 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
       channel_id: channelId,
       user_id: session?.userId ?? 'me',
       content: trimmed,
-      image_url: null,
+      image_url: uploadedUrl ?? null,
       is_edited: false,
       reply_to: null,
       created_at: new Date().toISOString(),
@@ -78,7 +164,6 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
       },
     }
 
-    // Inject at the start of the first page (newest messages first in page[0])
     queryClient.setQueryData<InfiniteData>(
       ['community', 'messages', channelSlug],
       (old) => {
@@ -93,10 +178,9 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
 
     // --- Send to server ---
     send(
-      { channelId, content: trimmed },
+      { channelId, content: trimmed, imageUrl: uploadedUrl },
       {
         onSuccess: (serverMsg: Message) => {
-          // Replace optimistic message with real server response
           queryClient.setQueryData<InfiniteData>(
             ['community', 'messages', channelSlug],
             (old) => {
@@ -112,7 +196,6 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
           )
         },
         onError: () => {
-          // Remove optimistic message on error, restore content
           queryClient.setQueryData<InfiniteData>(
             ['community', 'messages', channelSlug],
             (old) => {
@@ -128,7 +211,7 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
         },
       }
     )
-  }, [content, isPending, send, channelId, channelSlug, queryClient, session])
+  }, [content, pendingImage, isPending, isUploading, send, channelId, channelSlug, queryClient, session, removeImage])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -146,25 +229,94 @@ export default function MessageInput({ channelId, channelSlug }: MessageInputPro
 
   if (!session?.authenticated) return null
 
+  const canSend = (content.trim() || pendingImage) && !isPending && !isUploading
+
   return (
     <div className="px-4 pb-4 pt-2">
+      {/* Image preview area */}
+      {(isUploading || previewUrl) && (
+        <div className="mb-2 px-2">
+          {isUploading ? (
+            <ImageUploadSkeleton />
+          ) : previewUrl ? (
+            <div className="relative inline-block">
+              <img
+                src={previewUrl}
+                alt="Apercu"
+                className="rounded-lg max-h-[200px] object-contain border border-[rgba(255,255,255,0.06)] shadow-sm"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="
+                  absolute -top-2 -right-2
+                  w-5 h-5 rounded-full
+                  bg-[var(--color-void)] border border-[rgba(255,255,255,0.12)]
+                  flex items-center justify-center
+                  text-mist hover:text-ivory
+                  transition-colors
+                "
+                title="Supprimer l'image"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {/* Error */}
+      {uploadError && (
+        <p className="text-red-400/80 text-xs px-2 mb-1.5">{uploadError}</p>
+      )}
+
+      {/* Input row */}
       <div className="flex items-end gap-2 bg-[var(--color-charcoal)] rounded-lg border border-[rgba(99,102,241,0.1)] focus-within:border-[rgba(99,102,241,0.3)] transition-colors">
+        {/* Image upload button */}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading || isPending}
+          title="Joindre une image"
+          className={`
+            p-3 rounded-lg transition-all ml-1 mb-1 shrink-0
+            ${isUploading || isPending
+              ? 'text-mist/20 cursor-not-allowed'
+              : 'text-mist hover:text-ivory hover:bg-[rgba(255,255,255,0.05)]'
+            }
+          `}
+        >
+          <ImagePlus className="w-4 h-4" />
+        </button>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
         <textarea
           ref={textareaRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
           onInput={handleInput}
+          onPaste={handlePaste}
           placeholder="Envoyer un message..."
           rows={1}
-          className="flex-1 bg-transparent text-ivory placeholder-mist/50 text-sm px-4 py-3 resize-none outline-none max-h-[200px]"
+          className="flex-1 bg-transparent text-ivory placeholder-mist/50 text-sm px-2 py-3 resize-none outline-none max-h-[200px]"
         />
+
+        {/* Send button */}
         <button
           onClick={handleSend}
-          disabled={!content.trim() || isPending}
+          disabled={!canSend}
           className={`
-            p-3 rounded-lg transition-all mr-1 mb-1
-            ${content.trim()
+            p-3 rounded-lg transition-all mr-1 mb-1 shrink-0
+            ${canSend
               ? 'text-champagne hover:bg-[rgba(59,130,246,0.1)]'
               : 'text-mist/30 cursor-not-allowed'
             }

@@ -84,7 +84,13 @@ export async function getMessages(channelId: string, limit = 30, cursor?: string
   }>>(path)
 }
 
-export async function createMessage(channelId: string, userId: string, content: string, replyTo?: string) {
+export async function createMessage(
+  channelId: string,
+  userId: string,
+  content: string,
+  replyTo?: string,
+  imageUrl?: string
+) {
   return supabaseFetch('hvc_messages', {
     method: 'POST',
     body: JSON.stringify({
@@ -92,6 +98,7 @@ export async function createMessage(channelId: string, userId: string, content: 
       user_id: userId,
       content,
       reply_to: replyTo || null,
+      image_url: imageUrl || null,
     }),
   })
 }

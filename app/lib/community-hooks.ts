@@ -44,8 +44,17 @@ export function useMessages(channelSlug: string) {
 export function useSendMessage() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ channelId, content, replyTo }: { channelId: string; content: string; replyTo?: string }) =>
-      sendMessage(channelId, content, replyTo),
+    mutationFn: ({
+      channelId,
+      content,
+      replyTo,
+      imageUrl,
+    }: {
+      channelId: string
+      content: string
+      replyTo?: string
+      imageUrl?: string
+    }) => sendMessage(channelId, content, replyTo, imageUrl),
     onSuccess: () => {
       // Messages will be added via Realtime subscription, but invalidate to be safe
       queryClient.invalidateQueries({ queryKey: ['community', 'messages'] })

@@ -94,14 +94,26 @@ export async function fetchMessages(channelSlug: string, cursor?: string) {
   return res.json()
 }
 
-export async function sendMessage(channelId: string, content: string, replyTo?: string) {
+export async function sendMessage(channelId: string, content: string, replyTo?: string, imageUrl?: string) {
   const res = await fetch('/api/community/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ channelId, content, replyTo }),
+    body: JSON.stringify({ channelId, content, replyTo, imageUrl }),
   })
   if (!res.ok) throw new Error('Failed to send message')
   return res.json()
+}
+
+export async function uploadImage(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await fetch('/api/community/upload', {
+    method: 'POST',
+    body: formData,
+  })
+  if (!res.ok) throw new Error('Upload failed')
+  const data = await res.json()
+  return data.url
 }
 
 export async function deleteMessage(messageId: string) {

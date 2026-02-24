@@ -1,0 +1,24 @@
+{
+  "name": "HVC Community",
+  "short_name": "HVC",
+  "description": "Communauté High Value Capital — Trading Forex",
+  "start_url": "/community",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#d4af37",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/hvc-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/hvc-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
