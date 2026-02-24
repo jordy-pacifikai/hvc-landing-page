@@ -11,8 +11,10 @@ export interface Message {
   is_edited: boolean
   reply_to: string | null
   created_at: string
+  pending?: boolean
   user?: {
     id: string
+    discord_id: string
     discord_username: string
     discord_avatar: string | null
     role: string
@@ -38,6 +40,7 @@ export interface ForumPost {
   updated_at: string
   user?: {
     id: string
+    discord_id: string
     discord_username: string
     discord_avatar: string | null
     role: string
@@ -53,6 +56,7 @@ export interface ForumComment {
   created_at: string
   user?: {
     id: string
+    discord_id: string
     discord_username: string
     discord_avatar: string | null
     role: string
@@ -68,6 +72,7 @@ export interface Notification {
   is_read: boolean
   created_at: string
   sender?: {
+    discord_id: string
     discord_username: string
     discord_avatar: string | null
   }

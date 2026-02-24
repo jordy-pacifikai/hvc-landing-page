@@ -2,36 +2,133 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { Send } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useSendMessage } from '@/app/lib/community-hooks'
 import { useSession } from '@/app/lib/formation-hooks'
+import type { Message } from '@/app/lib/community-api'
 
 interface MessageInputProps {
   channelId: string
   channelSlug: string
 }
 
+// Phase 2b — typing broadcast stub (Supabase Realtime)
+// function useTypingBroadcast(channelId: string) {
+//   const supabase = useSupabaseClient()
+//   const broadcastTyping = useCallback(() => {
+//     supabase.channel(`typing:${channelId}`).send({
+//       type: 'broadcast',
+//       event: 'typing',
+//       payload: {},
+//     })
+//   }, [supabase, channelId])
+//   return { broadcastTyping }
+// }
+
+type SessionData = {
+  authenticated: boolean
+  userId?: string
+  discordId?: string
+  discordUsername?: string
+  discordAvatar?: string | null
+  isPremium?: boolean
+}
+
+type InfiniteData = {
+  pages: { messages: Message[]; hasMore: boolean }[]
+  pageParams: unknown[]
+}
+
 export default function MessageInput({ channelId, channelSlug }: MessageInputProps) {
   const [content, setContent] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const queryClient = useQueryClient()
   const { mutate: send, isPending } = useSendMessage()
-  const { data: session } = useSession()
+  const { data: session } = useSession() as { data: SessionData | null }
 
   const handleSend = useCallback(() => {
     const trimmed = content.trim()
     if (!trimmed || isPending) return
 
+    // Clear input immediately for better UX
+    setContent('')
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
+
+    // --- Optimistic update ---
+    const tempId = `pending-${Date.now()}`
+    const optimisticMsg: Message = {
+      id: tempId,
+      channel_id: channelId,
+      user_id: session?.userId ?? 'me',
+      content: trimmed,
+      image_url: null,
+      is_edited: false,
+      reply_to: null,
+      created_at: new Date().toISOString(),
+      pending: true,
+      user: {
+        id: session?.userId ?? 'me',
+        discord_id: session?.discordId ?? '',
+        discord_username: session?.discordUsername ?? 'Vous',
+        discord_avatar: session?.discordAvatar ?? null,
+        role: 'member',
+        is_premium: session?.isPremium ?? false,
+      },
+    }
+
+    // Inject at the start of the first page (newest messages first in page[0])
+    queryClient.setQueryData<InfiniteData>(
+      ['community', 'messages', channelSlug],
+      (old) => {
+        if (!old) return old
+        const pages = old.pages.map((page, i) => {
+          if (i !== 0) return page
+          return { ...page, messages: [optimisticMsg, ...page.messages] }
+        })
+        return { ...old, pages }
+      }
+    )
+
+    // --- Send to server ---
     send(
       { channelId, content: trimmed },
       {
-        onSuccess: () => {
-          setContent('')
-          if (textareaRef.current) {
-            textareaRef.current.style.height = 'auto'
-          }
+        onSuccess: (serverMsg: Message) => {
+          // Replace optimistic message with real server response
+          queryClient.setQueryData<InfiniteData>(
+            ['community', 'messages', channelSlug],
+            (old) => {
+              if (!old) return old
+              const pages = old.pages.map((page) => ({
+                ...page,
+                messages: page.messages.map((m) =>
+                  m.id === tempId ? { ...serverMsg, pending: false } : m
+                ),
+              }))
+              return { ...old, pages }
+            }
+          )
+        },
+        onError: () => {
+          // Remove optimistic message on error, restore content
+          queryClient.setQueryData<InfiniteData>(
+            ['community', 'messages', channelSlug],
+            (old) => {
+              if (!old) return old
+              const pages = old.pages.map((page) => ({
+                ...page,
+                messages: page.messages.filter((m) => m.id !== tempId),
+              }))
+              return { ...old, pages }
+            }
+          )
+          setContent(trimmed)
         },
       }
     )
-  }, [content, isPending, send, channelId])
+  }, [content, isPending, send, channelId, channelSlug, queryClient, session])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

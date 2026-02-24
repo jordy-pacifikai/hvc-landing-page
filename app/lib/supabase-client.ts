@@ -15,4 +15,4 @@ export const supabase = supabaseUrl && supabaseAnonKey
         },
       },
     })
-  : null as never // Will be available once env vars are set
+  : null

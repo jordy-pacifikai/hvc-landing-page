@@ -1,5 +1,8 @@
 'use client'
 
+import { useEffect, useRef, useCallback } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useMessages } from '@/app/lib/community-hooks'
 import type { Message } from '@/app/lib/community-api'
 
@@ -8,39 +11,289 @@ interface MessageListProps {
   channelId: string
 }
 
-export default function MessageList({ channelSlug, channelId }: MessageListProps) {
-  const { data, isLoading } = useMessages(channelSlug)
+// --- Helpers ---
 
+function formatDateSeparator(dateStr: string): string {
+  const date = new Date(dateStr)
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(today.getDate() - 1)
+
+  const isSameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+
+  if (isSameDay(date, today)) return "Aujourd'hui"
+  if (isSameDay(date, yesterday)) return 'Hier'
+  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+function isSameDay(a: string, b: string) {
+  const da = new Date(a)
+  const db = new Date(b)
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate()
+  )
+}
+
+function isGrouped(prev: Message, curr: Message): boolean {
+  if (!prev || prev.user_id !== curr.user_id) return false
+  const diff = new Date(curr.created_at).getTime() - new Date(prev.created_at).getTime()
+  return diff < 5 * 60 * 1000 // 5 minutes
+}
+
+function getAvatarUrl(user: Message['user']): string | null {
+  if (!user?.discord_avatar) return null
+  const discordId = user.discord_id || user.id
+  return `https://cdn.discordapp.com/avatars/${discordId}/${user.discord_avatar}.png?size=64`
+}
+
+// --- Skeleton ---
+
+function MessageSkeleton() {
+  return (
+    <div className="flex gap-3">
+      <div
+        className="w-10 h-10 rounded-full shrink-0"
+        style={{
+          background: 'linear-gradient(90deg, var(--color-charcoal) 25%, var(--color-slate) 37%, var(--color-charcoal) 63%)',
+          backgroundSize: '800px 100%',
+          animation: 'shimmer 1.8s ease-in-out infinite',
+        }}
+      />
+      <div className="flex-1 space-y-2">
+        <div
+          className="h-4 w-28 rounded"
+          style={{
+            background: 'linear-gradient(90deg, var(--color-charcoal) 25%, var(--color-slate) 37%, var(--color-charcoal) 63%)',
+            backgroundSize: '800px 100%',
+            animation: 'shimmer 1.8s ease-in-out infinite',
+          }}
+        />
+        <div
+          className="h-4 w-3/4 rounded"
+          style={{
+            background: 'linear-gradient(90deg, var(--color-charcoal) 25%, var(--color-slate) 37%, var(--color-charcoal) 63%)',
+            backgroundSize: '800px 100%',
+            animation: 'shimmer 1.8s ease-in-out infinite',
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
+// --- DateSeparator ---
+
+function DateSeparator({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 py-2 px-2">
+      <div className="flex-1 h-px bg-[rgba(255,255,255,0.06)]" />
+      <span className="text-mist/50 text-xs font-medium shrink-0">{label}</span>
+      <div className="flex-1 h-px bg-[rgba(255,255,255,0.06)]" />
+    </div>
+  )
+}
+
+// --- MessageContent (markdown) ---
+
+function MessageContent({ content }: { content: string }) {
+  return (
+    <div className="text-pearl text-sm break-words">
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        p: ({ children }) => <p className="whitespace-pre-wrap mb-0 last:mb-0">{children}</p>,
+        a: ({ href, children }) => (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-champagne underline underline-offset-2 hover:opacity-80 transition-opacity"
+          >
+            {children}
+          </a>
+        ),
+        strong: ({ children }) => <strong className="text-ivory font-semibold">{children}</strong>,
+        em: ({ children }) => <em className="text-pearl/80 italic">{children}</em>,
+        code: ({ children, className }) => {
+          const isBlock = className?.includes('language-')
+          if (isBlock) {
+            return (
+              <pre className="bg-[var(--color-void)] border border-[rgba(255,255,255,0.06)] rounded-md p-3 my-2 overflow-x-auto">
+                <code className="text-xs text-pearl font-mono">{children}</code>
+              </pre>
+            )
+          }
+          return (
+            <code className="bg-[var(--color-void)] text-champagne font-mono text-xs px-1.5 py-0.5 rounded">
+              {children}
+            </code>
+          )
+        },
+        pre: ({ children }) => <>{children}</>,
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+    </div>
+  )
+}
+
+// --- MessageRow ---
+
+interface MessageRowProps {
+  msg: Message
+  grouped: boolean
+}
+
+function MessageRow({ msg, grouped }: MessageRowProps) {
+  const avatarUrl = getAvatarUrl(msg.user)
+  const time = new Date(msg.created_at).toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+  if (grouped) {
+    return (
+      <div className="flex gap-3 py-0.5 px-2 rounded-md hover:bg-[rgba(255,255,255,0.02)] group relative">
+        {/* Placeholder width to align with avatar */}
+        <div className="w-10 shrink-0 flex items-center justify-center">
+          <span className="text-mist/30 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity leading-none">
+            {time}
+          </span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <MessageContent content={msg.content} />
+          {msg.pending && (
+            <span className="text-mist/40 text-[10px] ml-1">envoi...</span>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex gap-3 py-1.5 px-2 rounded-md hover:bg-[rgba(255,255,255,0.02)] group">
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt=""
+          width={40}
+          height={40}
+          className="w-10 h-10 rounded-full shrink-0 object-cover"
+        />
+      ) : (
+        <div className="w-10 h-10 rounded-full bg-gradient-gold flex items-center justify-center text-void text-sm font-bold shrink-0">
+          {msg.user?.discord_username?.[0]?.toUpperCase() || '?'}
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline gap-2">
+          <span className="text-ivory font-medium text-sm">
+            {msg.user?.discord_username || 'Unknown'}
+          </span>
+          {msg.user?.role && msg.user.role !== 'member' && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[rgba(99,102,241,0.15)] text-gold-pale font-medium uppercase">
+              {msg.user.role}
+            </span>
+          )}
+          <span className="text-mist/50 text-xs">{time}</span>
+          {msg.is_edited && (
+            <span className="text-mist/30 text-[10px]">(modifié)</span>
+          )}
+        </div>
+        <MessageContent content={msg.content} />
+        {msg.pending && (
+          <span className="text-mist/40 text-[10px]">envoi...</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// --- MessageList ---
+
+export default function MessageList({ channelSlug }: MessageListProps) {
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useMessages(channelSlug)
+
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const topSentinelRef = useRef<HTMLDivElement>(null)
+  const isNearBottomRef = useRef(true)
+
+  // Flatten pages — newest last (pages are in reverse order from API cursor)
+  const messages: Message[] = data?.pages
+    ? [...data.pages].reverse().flatMap((p: { messages: Message[] }) => p.messages)
+    : []
+
+  // Track if user is near bottom
+  const handleScroll = useCallback(() => {
+    const el = containerRef.current
+    if (!el) return
+    const threshold = 150
+    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold
+  }, [])
+
+  // Scroll to bottom on initial load
+  useEffect(() => {
+    if (!isLoading && messages.length > 0 && bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'instant' })
+    }
+  }, [isLoading]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Scroll to bottom when new messages arrive and user is near bottom
+  const prevLengthRef = useRef(messages.length)
+  useEffect(() => {
+    if (messages.length > prevLengthRef.current && isNearBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+    prevLengthRef.current = messages.length
+  }, [messages.length])
+
+  // IntersectionObserver for infinite scroll (load older messages)
+  useEffect(() => {
+    const sentinel = topSentinelRef.current
+    if (!sentinel) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          // Save scroll position before loading
+          const container = containerRef.current
+          const scrollHeightBefore = container?.scrollHeight ?? 0
+
+          fetchNextPage().then(() => {
+            // Restore scroll position after new messages inserted at top
+            if (container) {
+              const added = container.scrollHeight - scrollHeightBefore
+              container.scrollTop += added
+            }
+          })
+        }
+      },
+      { root: containerRef.current, threshold: 0.1 }
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
+  // --- Loading state ---
   if (isLoading) {
     return (
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="flex gap-3">
-            <div className="w-10 h-10 rounded-full shrink-0" style={{
-              background: 'linear-gradient(90deg, var(--color-charcoal) 25%, var(--color-slate) 37%, var(--color-charcoal) 63%)',
-              backgroundSize: '800px 100%',
-              animation: 'shimmer 1.8s ease-in-out infinite',
-            }} />
-            <div className="flex-1 space-y-2">
-              <div className="h-4 w-28 rounded" style={{
-                background: 'linear-gradient(90deg, var(--color-charcoal) 25%, var(--color-slate) 37%, var(--color-charcoal) 63%)',
-                backgroundSize: '800px 100%',
-                animation: 'shimmer 1.8s ease-in-out infinite',
-              }} />
-              <div className="h-4 w-3/4 rounded" style={{
-                background: 'linear-gradient(90deg, var(--color-charcoal) 25%, var(--color-slate) 37%, var(--color-charcoal) 63%)',
-                backgroundSize: '800px 100%',
-                animation: 'shimmer 1.8s ease-in-out infinite',
-              }} />
-            </div>
-          </div>
+          <MessageSkeleton key={i} />
         ))}
       </div>
     )
   }
 
-  const messages: Message[] = data?.pages?.flatMap((p: { messages: Message[] }) => p.messages) || []
-
+  // --- Empty state ---
   if (messages.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -53,39 +306,69 @@ export default function MessageList({ channelSlug, channelId }: MessageListProps
     )
   }
 
+  // --- Build render list with date separators and grouping ---
+  type RenderItem =
+    | { type: 'separator'; key: string; label: string }
+    | { type: 'message'; key: string; msg: Message; grouped: boolean }
+
+  const items: RenderItem[] = []
+
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i]
+    const prev = messages[i - 1]
+
+    // Date separator
+    if (!prev || !isSameDay(prev.created_at, msg.created_at)) {
+      items.push({
+        type: 'separator',
+        key: `sep-${msg.created_at}`,
+        label: formatDateSeparator(msg.created_at),
+      })
+    }
+
+    items.push({
+      type: 'message',
+      key: msg.id,
+      msg,
+      grouped: !!prev && isSameDay(prev.created_at, msg.created_at) && isGrouped(prev, msg),
+    })
+  }
+
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-1 flex flex-col-reverse">
-      {messages.map((msg) => (
-        <div key={msg.id} className="flex gap-3 py-1.5 px-2 rounded-md hover:bg-[rgba(255,255,255,0.02)] group">
-          {msg.user?.discord_avatar ? (
-            <img
-              src={`https://cdn.discordapp.com/avatars/${msg.user.id}/${msg.user.discord_avatar}.png?size=64`}
-              alt=""
-              className="w-10 h-10 rounded-full shrink-0"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-gradient-gold flex items-center justify-center text-void text-sm font-bold shrink-0">
-              {msg.user?.discord_username?.[0]?.toUpperCase() || '?'}
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <div className="flex items-baseline gap-2">
-              <span className="text-ivory font-medium text-sm">
-                {msg.user?.discord_username || 'Unknown'}
-              </span>
-              {msg.user?.role && msg.user.role !== 'member' && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[rgba(99,102,241,0.15)] text-gold-pale font-medium uppercase">
-                  {msg.user.role}
-                </span>
-              )}
-              <span className="text-mist/50 text-xs">
-                {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </div>
-            <p className="text-pearl text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="flex-1 overflow-y-auto p-4 space-y-0"
+    >
+      {/* Top sentinel for infinite scroll */}
+      <div ref={topSentinelRef} className="h-1" />
+
+      {/* Load more indicator */}
+      {isFetchingNextPage && (
+        <div className="flex justify-center py-3">
+          <div className="flex gap-1">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-1.5 h-1.5 rounded-full bg-mist/40"
+                style={{ animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite` }}
+              />
+            ))}
           </div>
         </div>
-      ))}
+      )}
+
+      {/* Messages */}
+      {items.map((item) =>
+        item.type === 'separator' ? (
+          <DateSeparator key={item.key} label={item.label} />
+        ) : (
+          <MessageRow key={item.key} msg={item.msg} grouped={item.grouped} />
+        )
+      )}
+
+      {/* Bottom anchor for scroll */}
+      <div ref={bottomRef} className="h-1" />
     </div>
   )
 }

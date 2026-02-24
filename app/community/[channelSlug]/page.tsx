@@ -5,13 +5,18 @@ import { useCommunityStore } from '@/app/lib/community-store'
 import MessageList from '@/app/components/community/MessageList'
 import MessageInput from '@/app/components/community/MessageInput'
 import ForumPostList from '@/app/components/community/ForumPostList'
+import TypingIndicator from '@/app/components/community/TypingIndicator'
 import { useSession } from '@/app/lib/formation-hooks'
+import { useCommunityRealtime } from '@/app/lib/community-realtime'
 
 export default function ChannelPage({ params }: { params: Promise<{ channelSlug: string }> }) {
   const { channelSlug } = use(params)
   const { channels, setActiveChannel } = useCommunityStore()
   const { data: session } = useSession()
   const channel = channels.find((c) => c.slug === channelSlug)
+
+  // Subscribe to realtime messages for this channel
+  useCommunityRealtime(channel?.id ?? null)
 
   useEffect(() => {
     setActiveChannel(channelSlug)
@@ -32,6 +37,7 @@ export default function ChannelPage({ params }: { params: Promise<{ channelSlug:
   return (
     <div className="flex flex-col h-full">
       <MessageList channelSlug={channelSlug} channelId={channel.id} />
+      <TypingIndicator channelId={channel.id} />
       {!channel.is_readonly && session?.authenticated && (
         <MessageInput channelId={channel.id} channelSlug={channelSlug} />
       )}

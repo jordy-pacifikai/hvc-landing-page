@@ -8,10 +8,11 @@ import { useQueryClient } from '@tanstack/react-query'
 
 export function useCommunityRealtime(channelId: string | null) {
   const queryClient = useQueryClient()
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const channelRef = useRef<any>(null)
 
   useEffect(() => {
-    if (!channelId) return
+    if (!channelId || !supabase) return
 
     // Subscribe to new messages in this channel
     const channel = supabase
@@ -46,7 +47,7 @@ export function useCommunityRealtime(channelId: string | null) {
     channelRef.current = channel
 
     return () => {
-      if (channelRef.current) {
+      if (channelRef.current && supabase) {
         supabase.removeChannel(channelRef.current)
       }
     }
@@ -54,11 +55,12 @@ export function useCommunityRealtime(channelId: string | null) {
 }
 
 export function useTypingBroadcast(channelId: string | null) {
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const channelRef = useRef<any>(null)
   const { addTypingUser, removeTypingUser } = useCommunityStore()
 
   useEffect(() => {
-    if (!channelId) return
+    if (!channelId || !supabase) return
 
     const channel = supabase
       .channel(`typing:${channelId}`)
@@ -82,7 +84,7 @@ export function useTypingBroadcast(channelId: string | null) {
     channelRef.current = channel
 
     return () => {
-      if (channelRef.current) {
+      if (channelRef.current && supabase) {
         supabase.removeChannel(channelRef.current)
       }
     }
@@ -104,6 +106,8 @@ export function usePresence() {
   const { setOnlineUsers } = useCommunityStore()
 
   useEffect(() => {
+    if (!supabase) return
+
     const channel = supabase.channel('online-users')
 
     channel
@@ -122,11 +126,12 @@ export function usePresence() {
       .subscribe()
 
     return () => {
-      supabase.removeChannel(channel)
+      if (supabase) supabase.removeChannel(channel)
     }
   }, [setOnlineUsers])
 
   const trackPresence = (userId: string, username: string) => {
+    if (!supabase) return
     const channel = supabase.channel('online-users')
     channel.track({
       userId,

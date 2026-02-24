@@ -60,7 +60,7 @@ export async function getChannelBySlug(slug: string) {
 // --- Messages ---
 
 export async function getMessages(channelId: string, limit = 30, cursor?: string) {
-  let path = `hvc_messages?channel_id=eq.${channelId}&select=*,user:hvc_users(id,discord_username,discord_avatar,role,is_premium)&order=created_at.desc&limit=${limit}`
+  let path = `hvc_messages?channel_id=eq.${channelId}&select=*,user:hvc_users(id,discord_id,discord_username,discord_avatar,role,is_premium)&order=created_at.desc&limit=${limit}`
   if (cursor) {
     path += `&created_at=lt.${cursor}`
   }
@@ -75,6 +75,7 @@ export async function getMessages(channelId: string, limit = 30, cursor?: string
     created_at: string
     user: {
       id: string
+      discord_id: string
       discord_username: string
       discord_avatar: string | null
       role: string
@@ -166,7 +167,7 @@ export async function getLatestMessageTimes() {
 // --- Forum Posts ---
 
 export async function getForumPosts(channelId: string, limit = 20, cursor?: string) {
-  let path = `hvc_forum_posts?channel_id=eq.${channelId}&select=*,user:hvc_users(id,discord_username,discord_avatar,role)&order=is_pinned.desc,created_at.desc&limit=${limit}`
+  let path = `hvc_forum_posts?channel_id=eq.${channelId}&select=*,user:hvc_users(id,discord_id,discord_username,discord_avatar,role)&order=is_pinned.desc,created_at.desc&limit=${limit}`
   if (cursor) {
     path += `&created_at=lt.${cursor}`
   }
@@ -186,14 +187,14 @@ export async function createForumPostDb(channelId: string, userId: string, title
 }
 
 export async function getForumPostById(postId: string) {
-  return supabaseFetch(`hvc_forum_posts?id=eq.${postId}&select=*,user:hvc_users(id,discord_username,discord_avatar,role)`, {
+  return supabaseFetch(`hvc_forum_posts?id=eq.${postId}&select=*,user:hvc_users(id,discord_id,discord_username,discord_avatar,role)`, {
     method: 'GET',
     headers: { Accept: 'application/vnd.pgrst.object+json' },
   })
 }
 
 export async function getForumComments(postId: string) {
-  return supabaseFetch(`hvc_forum_comments?post_id=eq.${postId}&select=*,user:hvc_users(id,discord_username,discord_avatar,role)&order=created_at.asc`)
+  return supabaseFetch(`hvc_forum_comments?post_id=eq.${postId}&select=*,user:hvc_users(id,discord_id,discord_username,discord_avatar,role)&order=created_at.asc`)
 }
 
 export async function createForumCommentDb(postId: string, userId: string, content: string) {
@@ -219,7 +220,7 @@ export async function incrementPostViews(postId: string) {
 // --- Notifications ---
 
 export async function getUserNotifications(userId: string, limit = 20) {
-  return supabaseFetch(`hvc_notifications?user_id=eq.${userId}&select=*,sender:hvc_users!sender_id(discord_username,discord_avatar)&order=created_at.desc&limit=${limit}`)
+  return supabaseFetch(`hvc_notifications?user_id=eq.${userId}&select=*,sender:hvc_users!sender_id(discord_id,discord_username,discord_avatar)&order=created_at.desc&limit=${limit}`)
 }
 
 export async function createNotification(
@@ -274,9 +275,9 @@ export async function getOnlineMembers() {
 
 export async function searchMessages(query: string, limit = 20) {
   // Use ILIKE for now, can upgrade to full-text search later
-  return supabaseFetch(`hvc_messages?content=ilike.*${encodeURIComponent(query)}*&select=*,user:hvc_users(id,discord_username,discord_avatar)&order=created_at.desc&limit=${limit}`)
+  return supabaseFetch(`hvc_messages?content=ilike.*${encodeURIComponent(query)}*&select=*,user:hvc_users(id,discord_id,discord_username,discord_avatar)&order=created_at.desc&limit=${limit}`)
 }
 
 export async function searchForumPosts(query: string, limit = 20) {
-  return supabaseFetch(`hvc_forum_posts?or=(title.ilike.*${encodeURIComponent(query)}*,content.ilike.*${encodeURIComponent(query)}*)&select=*,user:hvc_users(id,discord_username,discord_avatar)&order=created_at.desc&limit=${limit}`)
+  return supabaseFetch(`hvc_forum_posts?or=(title.ilike.*${encodeURIComponent(query)}*,content.ilike.*${encodeURIComponent(query)}*)&select=*,user:hvc_users(id,discord_id,discord_username,discord_avatar)&order=created_at.desc&limit=${limit}`)
 }
