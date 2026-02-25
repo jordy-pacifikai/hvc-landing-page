@@ -105,25 +105,32 @@ export async function POST(req: NextRequest) {
     imageUrl
   )
   if (error) {
+    console.error('[community/messages POST] createMessage error:', error)
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
   }
 
+  // PostgREST returns an array with Prefer: return=representation — extract first item
+  const message = Array.isArray(data) ? data[0] : data
+  if (!message) {
+    console.error('[community/messages POST] no message returned from createMessage')
+    return NextResponse.json({ error: 'Failed to create message' }, { status: 500 })
+  }
+
   // Fire notification for replies (non-blocking — don't fail the message send)
-  if (replyTo && data) {
+  if (replyTo) {
     const { data: originalMsg } = await getMessageById(replyTo)
     if (originalMsg && originalMsg.user_id !== session.userId) {
-      // Don't await — notification failure shouldn't block the response
       createNotification(
         originalMsg.user_id,
         session.userId,
         'reply',
         channelId,
-        (data as { id?: string }).id
+        (message as { id?: string }).id
       ).catch(e => console.warn('[community] notification failed (non-fatal):', e))
     }
   }
 
-  return NextResponse.json(data)
+  return NextResponse.json(message)
 }
 
 export async function PATCH(req: NextRequest) {

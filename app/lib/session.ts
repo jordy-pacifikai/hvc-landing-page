@@ -54,10 +54,15 @@ export async function getSessionWithPremium(): Promise<IronSession<SessionData>>
       session.lastRoleCheck = now
       await session.save()
     } else {
-      const isPremium = await hasPremiumRole(session.discordId)
-      session.isPremium = isPremium
-      session.lastRoleCheck = now
-      await session.save()
+      try {
+        const isPremium = await hasPremiumRole(session.discordId)
+        session.isPremium = isPremium
+        session.lastRoleCheck = now
+        await session.save()
+      } catch (e) {
+        // Discord API failure — keep existing isPremium, don't lock user out
+        console.warn('[session] Discord role check failed, keeping isPremium:', session.isPremium, e)
+      }
     }
   }
 
