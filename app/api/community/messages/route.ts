@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = await getSession()
+  console.log('[community/messages POST] session:', { userId: session.userId, isPremium: session.isPremium, role: session.role })
   if (!session.userId || !session.isPremium) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

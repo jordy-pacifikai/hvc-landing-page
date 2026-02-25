@@ -8,12 +8,12 @@ export async function GET() {
   }
 
   const session = await getSession()
-  session.userId = 'dev-user-123'
-  session.discordId = '123456789012345678'
-  session.discordUsername = 'JordyTest'
+  session.userId = '828d7a93-4c9d-4355-9b71-c1884a949ca7'
+  session.discordId = '451540578249736222'
+  session.discordUsername = 'jordybanks'
   session.discordAvatar = null
   session.isPremium = true
-  session.role = 'member'
+  session.role = 'admin'
   await session.save()
 
   return NextResponse.redirect(new URL('/community', 'http://localhost:3000'))

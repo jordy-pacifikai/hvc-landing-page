@@ -214,7 +214,7 @@ export async function getUnreadCounts(userId: string, channelIds: string[]) {
       const lastRead = readMap.get(channelId)
       let path = `hvc_messages?channel_id=eq.${channelId}&select=id`
       if (lastRead) {
-        path += `&created_at=gt.${lastRead}`
+        path += `&created_at=gt.${encodeURIComponent(lastRead)}`
       }
       path += '&limit=100'
       const { data } = await supabaseFetch<Array<{ id: string }>>(path)

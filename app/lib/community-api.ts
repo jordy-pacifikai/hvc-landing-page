@@ -117,7 +117,11 @@ export async function sendMessage(channelId: string, content: string, replyTo?: 
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ channelId, content, replyTo, imageUrl }),
   })
-  if (!res.ok) throw new Error('Failed to send message')
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    console.error('[sendMessage] failed:', res.status, body)
+    throw new Error(`Failed to send message: ${res.status}`)
+  }
   return res.json()
 }
 
