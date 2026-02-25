@@ -7,7 +7,8 @@ export function useSession() {
   return useQuery({
     queryKey: ['session'],
     queryFn: fetchSession,
-    retry: false,
+    retry: 2,
+    staleTime: 60_000,
   })
 }
 

@@ -1,19 +1,23 @@
 // Client-side fetch helpers for formation pages
 
+function apiFetch(url: string, init?: RequestInit): Promise<Response> {
+  return fetch(url, { credentials: 'include', ...init })
+}
+
 export async function fetchSession() {
-  const res = await fetch('/api/auth/session')
+  const res = await apiFetch('/api/auth/session')
   if (!res.ok) return null
   return res.json()
 }
 
 export async function fetchProgress() {
-  const res = await fetch('/api/formation/progress')
+  const res = await apiFetch('/api/formation/progress')
   if (!res.ok) return null
   return res.json()
 }
 
 export async function markComplete(lessonId: string) {
-  const res = await fetch('/api/formation/progress', {
+  const res = await apiFetch('/api/formation/progress', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ lessonId }),
@@ -23,7 +27,7 @@ export async function markComplete(lessonId: string) {
 }
 
 export async function submitQuiz(moduleId: string, answers: Record<string, number>) {
-  const res = await fetch('/api/formation/quiz', {
+  const res = await apiFetch('/api/formation/quiz', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ moduleId, answers }),
@@ -33,18 +37,18 @@ export async function submitQuiz(moduleId: string, answers: Record<string, numbe
 }
 
 export async function fetchQuiz(moduleId: string) {
-  const res = await fetch(`/api/formation/quiz?moduleId=${moduleId}`)
+  const res = await apiFetch(`/api/formation/quiz?moduleId=${moduleId}`)
   if (!res.ok) return null
   return res.json()
 }
 
 export async function fetchQuizResults() {
-  const res = await fetch('/api/formation/quiz?results=true')
+  const res = await apiFetch('/api/formation/quiz?results=true')
   if (!res.ok) return null
   return res.json()
 }
 
 export async function logout() {
-  await fetch('/api/auth/session', { method: 'DELETE' })
+  await apiFetch('/api/auth/session', { method: 'DELETE' })
   window.location.href = '/formation'
 }

@@ -80,6 +80,14 @@ export interface Notification {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Shared fetch wrapper — ensures credentials (cookies) are always sent.
+// Without this, Vercel production drops the session cookie on POST/PATCH/DELETE.
+// ---------------------------------------------------------------------------
+function apiFetch(url: string, init?: RequestInit): Promise<Response> {
+  return fetch(url, { credentials: 'include', ...init })
+}
+
 // Fetch helpers
 
 export interface Member {
@@ -91,14 +99,14 @@ export interface Member {
 }
 
 export async function fetchMembers(): Promise<Member[]> {
-  const res = await fetch('/api/community/members')
+  const res = await apiFetch('/api/community/members')
   if (!res.ok) return []
   const data = await res.json()
   return data.members || []
 }
 
 export async function fetchChannels() {
-  const res = await fetch('/api/community/channels')
+  const res = await apiFetch('/api/community/channels')
   if (!res.ok) return []
   return res.json()
 }
@@ -106,13 +114,13 @@ export async function fetchChannels() {
 export async function fetchMessages(channelSlug: string, cursor?: string) {
   const params = new URLSearchParams({ slug: channelSlug, limit: '30' })
   if (cursor) params.set('cursor', cursor)
-  const res = await fetch(`/api/community/messages?${params}`)
+  const res = await apiFetch(`/api/community/messages?${params}`)
   if (!res.ok) return { messages: [], hasMore: false }
   return res.json()
 }
 
 export async function sendMessage(channelId: string, content: string, replyTo?: string, imageUrl?: string) {
-  const res = await fetch('/api/community/messages', {
+  const res = await apiFetch('/api/community/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ channelId, content, replyTo, imageUrl }),
@@ -128,7 +136,7 @@ export async function sendMessage(channelId: string, content: string, replyTo?: 
 export async function uploadImage(file: File): Promise<string> {
   const formData = new FormData()
   formData.append('file', file)
-  const res = await fetch('/api/community/upload', {
+  const res = await apiFetch('/api/community/upload', {
     method: 'POST',
     body: formData,
   })
@@ -138,7 +146,7 @@ export async function uploadImage(file: File): Promise<string> {
 }
 
 export async function editMessage(messageId: string, content: string) {
-  const res = await fetch('/api/community/messages', {
+  const res = await apiFetch('/api/community/messages', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messageId, content }),
@@ -148,7 +156,7 @@ export async function editMessage(messageId: string, content: string) {
 }
 
 export async function deleteMessage(messageId: string) {
-  const res = await fetch(`/api/community/messages?id=${messageId}`, {
+  const res = await apiFetch(`/api/community/messages?id=${messageId}`, {
     method: 'DELETE',
   })
   if (!res.ok) throw new Error('Failed to delete message')
@@ -156,7 +164,7 @@ export async function deleteMessage(messageId: string) {
 }
 
 export async function addReaction(messageId: string, emoji: string) {
-  const res = await fetch('/api/community/messages/reactions', {
+  const res = await apiFetch('/api/community/messages/reactions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messageId, emoji }),
@@ -166,7 +174,7 @@ export async function addReaction(messageId: string, emoji: string) {
 }
 
 export async function removeReaction(messageId: string, emoji: string) {
-  const res = await fetch(`/api/community/messages/reactions?messageId=${messageId}&emoji=${encodeURIComponent(emoji)}`, {
+  const res = await apiFetch(`/api/community/messages/reactions?messageId=${messageId}&emoji=${encodeURIComponent(emoji)}`, {
     method: 'DELETE',
   })
   if (!res.ok) throw new Error('Failed to remove reaction')
@@ -174,7 +182,7 @@ export async function removeReaction(messageId: string, emoji: string) {
 }
 
 export async function markChannelRead(channelSlug: string) {
-  const res = await fetch(`/api/community/channels/${channelSlug}/read`, {
+  const res = await apiFetch(`/api/community/channels/${channelSlug}/read`, {
     method: 'POST',
   })
   if (!res.ok) throw new Error('Failed to mark as read')
@@ -184,13 +192,13 @@ export async function markChannelRead(channelSlug: string) {
 export async function fetchForumPosts(channelSlug: string, cursor?: string) {
   const params = new URLSearchParams({ slug: channelSlug })
   if (cursor) params.set('cursor', cursor)
-  const res = await fetch(`/api/community/forum?${params}`)
+  const res = await apiFetch(`/api/community/forum?${params}`)
   if (!res.ok) return { posts: [], hasMore: false }
   return res.json()
 }
 
 export async function createForumPost(channelId: string, title: string, content: string) {
-  const res = await fetch('/api/community/forum', {
+  const res = await apiFetch('/api/community/forum', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ channelId, title, content }),
@@ -200,13 +208,13 @@ export async function createForumPost(channelId: string, title: string, content:
 }
 
 export async function fetchForumPost(postId: string) {
-  const res = await fetch(`/api/community/forum/${postId}`)
+  const res = await apiFetch(`/api/community/forum/${postId}`)
   if (!res.ok) return null
   return res.json()
 }
 
 export async function addForumComment(postId: string, content: string) {
-  const res = await fetch(`/api/community/forum/${postId}`, {
+  const res = await apiFetch(`/api/community/forum/${postId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content }),
@@ -216,13 +224,13 @@ export async function addForumComment(postId: string, content: string) {
 }
 
 export async function fetchNotifications() {
-  const res = await fetch('/api/community/notifications')
+  const res = await apiFetch('/api/community/notifications')
   if (!res.ok) return []
   return res.json()
 }
 
 export async function markNotificationsRead(ids: string[]) {
-  const res = await fetch('/api/community/notifications', {
+  const res = await apiFetch('/api/community/notifications', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ids }),
@@ -232,7 +240,7 @@ export async function markNotificationsRead(ids: string[]) {
 }
 
 export async function reportMessage(messageId: string, reason?: string) {
-  const res = await fetch('/api/community/messages/report', {
+  const res = await apiFetch('/api/community/messages/report', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messageId, reason }),
@@ -242,7 +250,7 @@ export async function reportMessage(messageId: string, reason?: string) {
 }
 
 export async function searchCommunity(query: string) {
-  const res = await fetch(`/api/community/search?q=${encodeURIComponent(query)}`)
+  const res = await apiFetch(`/api/community/search?q=${encodeURIComponent(query)}`)
   if (!res.ok) return { messages: [], posts: [] }
   return res.json()
 }
