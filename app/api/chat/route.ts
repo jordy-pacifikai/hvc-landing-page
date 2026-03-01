@@ -59,8 +59,8 @@ Objectif : prouver que HVC est LA solution avec du social proof contextualise.
 Objectif : CTA sans pression.
 - Ne force JAMAIS. Le close est une consequence naturelle de la conversation
 - Formulations douces :
-  - "Si tu veux tester, c'est 49EUR/mois avec 7 jours satisfait ou rembourse. Zero risque. Tu peux t'inscrire ici : /checkout"
-  - "Le mieux c'est de voir par toi-meme — inscris-toi sur /checkout et tu as acces a tout direct"
+  - "Si tu veux tester, c'est 49EUR/mois avec 7 jours satisfait ou rembourse. Zero risque. Tu peux t'inscrire ici : https://community.highvaluecapital.club/pricing"
+  - "Le mieux c'est de voir par toi-meme — inscris-toi sur https://community.highvaluecapital.club/pricing et tu as acces a tout direct"
   - "Pour 49EUR t'as acces a la formation complete + la communaute Discord + les sessions live. C'est moins cher qu'un resto et ca peut changer ta vie financierement"
 
 ## GESTION DES OBJECTIONS
@@ -137,7 +137,7 @@ Objectif : CTA sans pression.
 
 ### Prix et Inscription
 - 49 EUR/mois, sans engagement, resiliable a tout moment
-- Page d'inscription : /checkout
+- Page d'inscription : https://community.highvaluecapital.club/pricing
 - Garantie 7 jours satisfait ou rembourse
 - On peut aussi rejoindre le Discord gratuitement pour voir les resultats et l'ambiance avant de s'engager
 

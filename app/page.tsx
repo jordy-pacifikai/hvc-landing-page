@@ -395,7 +395,7 @@ function Hero() {
           >
             <span className="flex items-center justify-center gap-2">
               Rejoindre la Formation
-              <span className="text-void font-bold">— 49€/mois</span>
+              <span className="text-void font-bold">— dès 24,50€/mois</span>
               <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </span>
           </a>
@@ -746,43 +746,77 @@ function Pricing() {
           </h2>
         </div>
 
-        <div className="max-w-lg mx-auto">
-          <div ref={spotlightRef} className={`relative card-highlight pricing-spotlight p-6 sm:p-10 glow-gold-intense rounded-2xl animate-border-pulse ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '200ms', transition: 'opacity 0.7s, transform 0.7s' }}>
-            <h3 className="font-display text-2xl sm:text-3xl font-medium mb-2 text-ivory">Formation HVC</h3>
-            <div className="flex items-baseline gap-3 mb-8 flex-wrap">
-              <span className="font-display text-4xl sm:text-5xl text-champagne">49€<span className="text-xl sm:text-2xl">/mois</span></span>
-              <span className="text-mist">sans engagement</span>
+        <div className="max-w-3xl mx-auto grid md:grid-cols-2 gap-6">
+          {/* Mensuel */}
+          <div className={`relative card p-6 sm:p-8 rounded-2xl ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '200ms', transition: 'opacity 0.7s, transform 0.7s' }}>
+            <h3 className="font-display text-xl sm:text-2xl font-medium mb-2 text-ivory">Mensuel</h3>
+            <div className="flex items-baseline gap-2 mb-6">
+              <span className="font-display text-4xl text-champagne">49€<span className="text-lg">/mois</span></span>
             </div>
+            <p className="text-mist text-sm mb-8">Sans engagement, résiliable à tout moment</p>
 
-            <ul className="space-y-4 mb-10">
+            <ul className="space-y-3 mb-8">
               {[
                 'Formation complète avancée (20+ heures)',
                 'Communauté Discord privée',
-                'Sessions live hebdomadaires',
                 'Analyses de trades personnalisées',
-                'Setups et analyses quotidiens',
-                'Templates et outils exclusifs',
-                'Sans engagement, résiliable à tout moment',
               ].map((item, index) => (
-                <li key={index} className="flex items-start gap-3 sm:gap-4">
-                  <CheckCircle className="w-5 h-5 text-champagne flex-shrink-0 mt-0.5" />
-                  <span className="text-pearl">{item}</span>
+                <li key={index} className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-champagne flex-shrink-0 mt-0.5" />
+                  <span className="text-pearl text-sm">{item}</span>
                 </li>
               ))}
             </ul>
 
             <a
               href={URLS.premium}
-              className="btn-primary w-full text-center block text-base sm:text-lg animate-cta-pulse"
-              onClick={() => { trackEvent('cta_clicked', { location: 'pricing' }); trackCheckoutInitiated() }}
+              className="btn-secondary w-full text-center block"
+              onClick={() => { trackEvent('cta_clicked', { location: 'pricing_monthly' }); trackCheckoutInitiated() }}
             >
               <span className="flex items-center justify-center gap-2">
-                Rejoindre HVC
-                <ArrowRight className="w-5 h-5" />
+                Choisir mensuel
+                <ArrowRight className="w-4 h-4" />
+              </span>
+            </a>
+          </div>
+
+          {/* Annuel — mis en avant */}
+          <div ref={spotlightRef} className={`relative card-highlight pricing-spotlight p-6 sm:p-8 glow-gold-intense rounded-2xl animate-border-pulse ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '300ms', transition: 'opacity 0.7s, transform 0.7s' }}>
+            <span className="absolute -top-3 right-4 bg-gradient-to-r from-champagne to-gold text-obsidian text-xs font-bold px-3 py-1 rounded-full">
+              -50% — MEILLEURE OFFRE
+            </span>
+            <h3 className="font-display text-xl sm:text-2xl font-medium mb-2 text-ivory">Annuel</h3>
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className="font-display text-4xl text-champagne">24,50€<span className="text-lg">/mois</span></span>
+            </div>
+            <p className="text-mist text-sm mb-6">294€ facturé une fois <span className="line-through text-smoke">588€</span></p>
+
+            <ul className="space-y-3 mb-8">
+              {[
+                'Formation complète avancée (20+ heures)',
+                'Communauté Discord privée',
+                'Analyses de trades personnalisées',
+                '12 mois d\'accès garanti',
+              ].map((item, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-champagne flex-shrink-0 mt-0.5" />
+                  <span className="text-pearl text-sm">{item}</span>
+                </li>
+              ))}
+            </ul>
+
+            <a
+              href={URLS.premium}
+              className="btn-primary w-full text-center block text-base animate-cta-pulse"
+              onClick={() => { trackEvent('cta_clicked', { location: 'pricing_yearly' }); trackCheckoutInitiated() }}
+            >
+              <span className="flex items-center justify-center gap-2">
+                Choisir annuel — Économise 294€
+                <ArrowRight className="w-4 h-4" />
               </span>
             </a>
 
-            <p className="text-center text-sm text-mist mt-5">
+            <p className="text-center text-xs text-mist mt-4">
               95% de nos Funded Traders ont choisi cette formation
             </p>
           </div>
@@ -916,7 +950,7 @@ function FinalCTA() {
               onClick={() => { trackEvent('cta_clicked', { location: 'footer' }); trackCheckoutInitiated() }}
             >
               <span className="flex items-center justify-center gap-2">
-                Rejoindre HVC - 49€/mois
+                Rejoindre HVC — dès 24,50€/mois
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </span>
             </a>

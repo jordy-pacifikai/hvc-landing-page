@@ -44,7 +44,7 @@ export default function FormationPage() {
         <LoginButton />
         <p className="text-sm text-[var(--color-mist)] mt-6">
           Pas encore membre ?{' '}
-          <a href="/checkout" className="underline hover:text-[var(--color-ivory)]">
+          <a href="https://community.highvaluecapital.club/pricing" className="underline hover:text-[var(--color-ivory)]">
             Devenir Premium
           </a>
         </p>

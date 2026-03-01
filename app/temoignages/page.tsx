@@ -588,7 +588,7 @@ export default function TestimonialsPage() {
 
           <div className="flex flex-col sm:flex-row gap-5 justify-center">
             <Link
-              href="/checkout"
+              href="https://community.highvaluecapital.club/pricing"
               className="btn-primary text-lg group"
             >
               <span className="flex items-center gap-2">

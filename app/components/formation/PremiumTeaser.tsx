@@ -15,7 +15,7 @@ export default function PremiumTeaser() {
         Cette formation est reservee aux membres Premium. Rejoins la communaute HVC pour acceder aux 42 lecons, aux quiz et aux roles exclusifs.
       </p>
       <a
-        href="/checkout"
+        href="https://community.highvaluecapital.club/pricing"
         className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white transition-all duration-300 hover:scale-105"
         style={{ background: 'linear-gradient(135deg, var(--color-champagne), var(--color-gold-light))' }}
       >
