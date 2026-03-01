@@ -43,7 +43,7 @@ export default function NotificationBell() {
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
             {/* Pulsing dot */}
-            <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-[var(--color-champagne)] animate-ping opacity-40 pointer-events-none" />
+            <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-[var(--color-champagne)] animate-soft-glow pointer-events-none" />
           </>
         )}
       </button>

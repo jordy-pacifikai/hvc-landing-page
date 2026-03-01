@@ -276,12 +276,21 @@ function CheckoutContent() {
           </div>
         </div>
 
-        {/* Footer securite */}
-        <div className="text-center mt-8">
+        {/* Footer securite + connexion */}
+        <div className="text-center mt-8 space-y-4">
           <div className="inline-flex items-center gap-2 text-mist text-sm">
             <Shield className="w-4 h-4 text-champagne/70" />
             <span>Paiement 100% securise par PayPal - Donnees protegees</span>
           </div>
+          <p className="text-mist text-sm">
+            Deja membre ?{' '}
+            <a
+              href="https://community.highvaluecapital.club/login"
+              className="text-champagne hover:underline"
+            >
+              Se connecter
+            </a>
+          </p>
         </div>
       </div>
     </main>
