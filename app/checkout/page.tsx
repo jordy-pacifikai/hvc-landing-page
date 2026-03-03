@@ -259,9 +259,8 @@ function CheckoutContent() {
                       createOrder={createOrder}
                       onApprove={onApprove}
                       onError={onError}
-                      fundingSource="card"
                       style={{
-                        color: 'black',
+                        color: 'gold',
                         shape: 'rect',
                         label: 'pay',
                         height: 55,
