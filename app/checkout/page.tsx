@@ -1,11 +1,13 @@
 'use client'
 
-import { Suspense, useState, useCallback } from 'react'
+import { Suspense, useState, useCallback, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Loader2, ArrowLeft, CheckCircle, Shield, Zap, CreditCard, ArrowRight } from 'lucide-react'
+import { Loader2, ArrowLeft, CheckCircle, Shield, Zap, CreditCard, ArrowRight, ChevronDown } from 'lucide-react'
+import { PayPalScriptProvider, PayPalButtons, FUNDING } from '@paypal/react-paypal-js'
 
 const COMMUNITY_API = 'https://community.highvaluecapital.club/api/paypal'
+const PAYPAL_CLIENT_ID = 'ASvt7ImCDztqbX6HPpcVgPcHDf2tdquGLLFuH_KQlZ1uQq-aEtGYdHRUkRcrdFCJOpWOtcRNSz_rU12l'
 
 type Plan = 'monthly' | 'yearly'
 
@@ -55,35 +57,159 @@ function SimpleBackground() {
   )
 }
 
+function CardPaymentDropdown({ plan, onSuccess }: { plan: Plan; onSuccess: () => void }) {
+  const [expanded, setExpanded] = useState(false)
+  const [clientToken, setClientToken] = useState<string | null>(null)
+  const [loadingToken, setLoadingToken] = useState(false)
+  const [activating, setActivating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (expanded && !clientToken && !loadingToken) {
+      setLoadingToken(true)
+      fetch(`${COMMUNITY_API}/client-token`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.clientToken) {
+            setClientToken(d.clientToken)
+          } else {
+            setError('Impossible de charger le formulaire de paiement')
+          }
+        })
+        .catch(() => setError('Erreur de connexion'))
+        .finally(() => setLoadingToken(false))
+    }
+  }, [expanded, clientToken, loadingToken])
+
+  if (!expanded) {
+    return (
+      <div>
+        {error && <p className="text-red-400 text-xs mb-2 text-center">{error}</p>}
+        <button
+          onClick={() => { setError(null); setExpanded(true) }}
+          className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-champagne to-gold text-obsidian py-4 px-8 rounded-xl font-display font-semibold text-lg hover:shadow-lg hover:shadow-champagne/20 transition-all group"
+        >
+          <CreditCard className="w-5 h-5" />
+          Payer par carte bancaire
+          <ChevronDown className="w-5 h-5 transition-transform group-hover:translate-y-0.5" />
+        </button>
+      </div>
+    )
+  }
+
+  if (loadingToken || !clientToken) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-champagne" />
+          <span className="ml-3 text-mist text-sm">Chargement du formulaire...</span>
+        </div>
+        <button
+          onClick={() => { setExpanded(false); setClientToken(null) }}
+          className="w-full text-center text-mist text-sm hover:text-champagne transition-colors"
+        >
+          &larr; Retour
+        </button>
+      </div>
+    )
+  }
+
+  if (activating) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin text-champagne" />
+        <span className="ml-3 text-mist text-sm">Activation de ton abonnement...</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {error && (
+        <div className="text-center py-2 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <p className="text-red-400 text-sm">{error}</p>
+        </div>
+      )}
+
+      <div className="bg-white/90 rounded-xl p-4 shadow-sm">
+        <PayPalScriptProvider
+          options={{
+            clientId: PAYPAL_CLIENT_ID,
+            currency: 'EUR',
+            intent: 'capture',
+            locale: 'fr_FR',
+            components: 'buttons',
+            dataClientToken: clientToken,
+          }}
+        >
+          <PayPalButtons
+            key={plan}
+            fundingSource={FUNDING.CARD}
+            style={{
+              layout: 'vertical',
+              color: 'black',
+              shape: 'rect',
+              label: 'pay',
+              height: 50,
+            }}
+            createOrder={async () => {
+              setError(null)
+              const res = await fetch(`${COMMUNITY_API}/create-order`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan }),
+              })
+              const data = await res.json()
+              if (!res.ok || !data.id) {
+                throw new Error(data.error || 'Erreur creation commande')
+              }
+              return data.id
+            }}
+            onApprove={async (data) => {
+              setActivating(true)
+              setError(null)
+              try {
+                const res = await fetch(`${COMMUNITY_API}/activate`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ orderID: data.orderID }),
+                })
+                const result = await res.json()
+                if (!res.ok) {
+                  throw new Error(result.error || 'Erreur activation')
+                }
+                onSuccess()
+              } catch (err: any) {
+                setError(err.message || 'Erreur lors de l\'activation')
+                setActivating(false)
+              }
+            }}
+            onError={(err) => {
+              console.error('PayPal card error:', err)
+              setError('Erreur de paiement. Veuillez reessayer.')
+            }}
+            onCancel={() => {
+              setExpanded(false)
+            }}
+          />
+        </PayPalScriptProvider>
+      </div>
+
+      <button
+        onClick={() => { setExpanded(false); setError(null) }}
+        className="w-full text-center text-mist text-sm hover:text-champagne transition-colors"
+      >
+        &larr; Retour
+      </button>
+    </div>
+  )
+}
+
 function CheckoutContent() {
   const [plan, setPlan] = useState<Plan>('monthly')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
   const currentPlan = PLANS[plan]
-
-  const handlePayment = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch(`${COMMUNITY_API}/create-order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.approveUrl) {
-        throw new Error(data.error || 'Erreur lors de la creation')
-      }
-      sessionStorage.setItem('paypal_order_id', data.id)
-      window.location.href = data.approveUrl
-    } catch (err: any) {
-      console.error('Payment error:', err)
-      setError(err.message || 'Erreur lors du paiement. Reessayez.')
-      setLoading(false)
-    }
-  }, [plan])
 
   if (success) {
     return (
@@ -139,12 +265,6 @@ function CheckoutContent() {
 
         {/* Card principale */}
         <div className="card-highlight p-8 md:p-12 rounded-2xl glow-gold">
-          {error && (
-            <div className="text-center py-3 mb-6 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
           <div>
             <h3 className="font-display text-lg font-medium mb-5 flex items-center gap-2 text-ivory">
               <Zap className="w-5 h-5 text-champagne" />
@@ -211,26 +331,9 @@ function CheckoutContent() {
               </p>
             </div>
 
-            {/* Payment button */}
+            {/* Payment dropdown */}
             <div className="mt-8">
-              <button
-                onClick={handlePayment}
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-champagne to-gold text-obsidian py-4 px-8 rounded-xl font-display font-semibold text-lg hover:shadow-lg hover:shadow-champagne/20 transition-all disabled:opacity-60 group"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Redirection securisee...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="w-5 h-5" />
-                    Payer par carte bancaire
-                    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                  </>
-                )}
-              </button>
+              <CardPaymentDropdown plan={plan} onSuccess={() => setSuccess(true)} />
             </div>
           </div>
         </div>
@@ -239,7 +342,7 @@ function CheckoutContent() {
         <div className="text-center mt-8 space-y-4">
           <div className="inline-flex items-center gap-2 text-mist text-sm">
             <Shield className="w-4 h-4 text-champagne/70" />
-            <span>Paiement 100% securise par PayPal - Donnees protegees</span>
+            <span>Paiement 100% securise - Donnees protegees</span>
           </div>
           <p className="text-mist text-sm">
             Deja membre ?{' '}
