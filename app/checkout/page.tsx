@@ -3,11 +3,9 @@
 import { Suspense, useState, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Loader2, ArrowLeft, CheckCircle, Shield, Zap, CreditCard } from 'lucide-react'
-import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
+import { Loader2, ArrowLeft, CheckCircle, Shield, Zap, CreditCard, ArrowRight } from 'lucide-react'
 
 const COMMUNITY_API = 'https://community.highvaluecapital.club/api/paypal'
-const PAYPAL_CLIENT_ID = 'ASvt7ImCDztqbX6HPpcVgPcHDf2tdquGLLFuH_KQlZ1uQq-aEtGYdHRUkRcrdFCJOpWOtcRNSz_rU12l'
 
 type Plan = 'monthly' | 'yearly'
 
@@ -65,45 +63,27 @@ function CheckoutContent() {
 
   const currentPlan = PLANS[plan]
 
-  const createOrder = useCallback(async () => {
-    const res = await fetch(`${COMMUNITY_API}/create-order`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan }),
-    })
-    const data = await res.json()
-    if (!res.ok || !data.id) {
-      throw new Error(data.error || 'Erreur lors de la creation')
-    }
-    return data.id
-  }, [plan])
-
-  const onApprove = useCallback(async (data: { orderID: string }) => {
+  const handlePayment = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${COMMUNITY_API}/activate`, {
+      const res = await fetch(`${COMMUNITY_API}/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderID: data.orderID }),
+        body: JSON.stringify({ plan }),
       })
-      const result = await res.json()
-      if (!res.ok) {
-        throw new Error(result.error || 'Erreur lors de l\'activation')
+      const data = await res.json()
+      if (!res.ok || !data.approveUrl) {
+        throw new Error(data.error || 'Erreur lors de la creation')
       }
-      setSuccess(true)
+      sessionStorage.setItem('paypal_order_id', data.id)
+      window.location.href = data.approveUrl
     } catch (err: any) {
-      setError(err.message || 'Erreur lors du paiement')
-    } finally {
+      console.error('Payment error:', err)
+      setError(err.message || 'Erreur lors du paiement. Reessayez.')
       setLoading(false)
     }
-  }, [])
-
-  const onError = useCallback((err: Record<string, unknown>) => {
-    console.error('PayPal error:', err)
-    setError('Une erreur est survenue lors du paiement. Veuillez reessayer.')
-    setLoading(false)
-  }, [])
+  }, [plan])
 
   if (success) {
     return (
@@ -231,46 +211,26 @@ function CheckoutContent() {
               </p>
             </div>
 
-            {/* Payment section */}
+            {/* Payment button */}
             <div className="mt-8">
-              <h3 className="font-display text-base font-medium mb-4 flex items-center gap-2 text-ivory">
-                <CreditCard className="w-5 h-5 text-champagne" />
-                Paiement par carte bancaire
-              </h3>
-
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-6 h-6 animate-spin text-champagne" />
-                  <span className="ml-3 text-mist text-sm">Traitement en cours...</span>
-                </div>
-              ) : (
-                <div className="bg-white/80 rounded-xl p-4">
-                  <PayPalScriptProvider
-                    options={{
-                      clientId: PAYPAL_CLIENT_ID,
-                      components: 'buttons',
-                      currency: 'EUR',
-                      intent: 'capture',
-                      locale: 'fr_FR',
-                    }}
-                  >
-                    <PayPalButtons
-                      key={plan}
-                      createOrder={createOrder}
-                      onApprove={onApprove}
-                      onError={onError}
-                      style={{
-                        color: 'gold',
-                        shape: 'rect',
-                        label: 'pay',
-                        height: 55,
-                        layout: 'vertical',
-                        tagline: false,
-                      }}
-                    />
-                  </PayPalScriptProvider>
-                </div>
-              )}
+              <button
+                onClick={handlePayment}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-champagne to-gold text-obsidian py-4 px-8 rounded-xl font-display font-semibold text-lg hover:shadow-lg hover:shadow-champagne/20 transition-all disabled:opacity-60 group"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Redirection securisee...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-5 h-5" />
+                    Payer par carte bancaire
+                    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
