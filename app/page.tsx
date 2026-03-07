@@ -135,7 +135,7 @@ function Hero() {
           {[
             { icon: Shield, text: 'Garantie 7 jours' },
             { icon: Users, text: '150+ membres actifs' },
-            { icon: Star, text: 'Alpha Capital · APEX · Blueberry' },
+            { icon: Star, text: 'Partenaires officiels' },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <item.icon className="w-3.5 h-3.5 text-accent/70" />
@@ -426,6 +426,78 @@ function Testimonials() {
           </a>
         </div>
       </div>
+    </section>
+  )
+}
+
+// ─── PARTNERS ────────────────────────────────────────
+function Partners() {
+  const { ref, revealed } = useReveal('partners')
+
+  const partners = [
+    {
+      name: 'StarTrader',
+      logo: '/logo-startrader.png',
+      width: 50,
+      height: 50,
+      url: 'https://client.startrader.com/sign-up?ib=54662',
+      promo: 'Broker forex regulé',
+    },
+    {
+      name: 'Blueberry Funded',
+      logo: '/logo-blueberry.png',
+      width: 160,
+      height: 40,
+      url: 'https://blueberryfunded.com/?utm_source=affiliate&campaign=highvaluecapital&ref=32',
+      promo: 'Code HVC15 — 15% off',
+    },
+    {
+      name: 'FX Replay',
+      logo: '/logo-fxreplay.png',
+      width: 140,
+      height: 40,
+      url: 'https://www.fxreplay.com/?utm_campaign=affiliate_program&utm_medium=affiliate&utm_source=rewardful&via=hvc',
+      promo: 'Code JORDYBANKS — 15% off',
+    },
+  ]
+
+  return (
+    <section ref={ref} className="py-16 sm:py-20 relative">
+      <div className="max-w-5xl mx-auto px-5 sm:px-8">
+        <div className={`reveal-up ${revealed ? 'revealed' : ''} text-center mb-10`}>
+          <p className="text-accent text-sm uppercase tracking-widest mb-3 font-medium">Partenaires officiels</p>
+          <p className="text-ivory-muted text-base">
+            Les outils que nous utilisons et recommandons — avec des codes promo exclusifs.
+          </p>
+        </div>
+
+        <div className={`reveal-up ${revealed ? 'revealed' : ''} flex flex-col sm:flex-row items-center justify-center gap-10 sm:gap-16`} style={{ transitionDelay: '0.15s' }}>
+          {partners.map((p, i) => (
+            <a
+              key={i}
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex flex-col items-center gap-2.5 transition-all"
+              onClick={() => trackEvent('partner_clicked', { partner: p.name })}
+            >
+              <Image
+                src={p.logo}
+                alt={p.name}
+                width={p.width}
+                height={p.height}
+                className="w-auto object-contain opacity-60 group-hover:opacity-100 transition-opacity duration-300"
+                style={{ height: p.height, maxWidth: p.width }}
+              />
+              <span className="text-ivory-dim text-xs tracking-wide group-hover:text-accent transition-colors duration-300">
+                {p.promo}
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <div className="absolute bottom-0 inset-x-0 accent-line" />
     </section>
   )
 }
@@ -811,6 +883,7 @@ export default function Home() {
       <Agitation />
       <Solution />
       <Testimonials />
+      <Partners />
       <Pricing />
       <Guarantee />
       <FAQ />
