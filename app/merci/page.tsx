@@ -78,9 +78,9 @@ export default function ThankYouPage() {
                   <BookOpen className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-ivory mb-1">Demarre ta formation</h3>
+                  <h3 className="font-medium text-ivory mb-1">Tout est pret</h3>
                   <p className="text-ivory-muted text-sm leading-relaxed">
-                    Accede a tous les modules de formation et progresse a ton rythme.
+                    Connecte-toi et commence quand tu veux.
                   </p>
                 </div>
               </div>
