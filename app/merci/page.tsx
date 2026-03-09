@@ -101,10 +101,10 @@ export default function ThankYouPage() {
             <p className="text-ivory-dim text-sm mt-6">
               Un probleme ? Ecris-nous a{' '}
               <a
-                href="mailto:contact@highvaluecapital.club"
+                href="mailto:support@highvaluecapital.club"
                 className="text-accent hover:underline"
               >
-                contact@highvaluecapital.club
+                support@highvaluecapital.club
               </a>
             </p>
           </div>
