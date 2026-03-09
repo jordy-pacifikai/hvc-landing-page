@@ -2,60 +2,18 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { CheckCircle, MessageCircle, ArrowRight, Sparkles, Mail, BookOpen, Shield } from 'lucide-react'
-
-function SimpleParticles() {
-  const particles = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    delay: `${Math.random() * 5}s`,
-    duration: `${4 + Math.random() * 3}s`
-  }))
-
-  return (
-    <div className="particles">
-      {particles.map((p) => (
-        <div
-          key={p.id}
-          className="particle particle-twinkle"
-          style={{
-            left: p.left,
-            top: p.top,
-            animationDelay: p.delay,
-            animationDuration: p.duration
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-function SimpleBackground() {
-  return (
-    <>
-      <div className="animated-bg">
-        <div className="orb orb-1" />
-        <div className="orb orb-2" />
-        <div className="orb orb-3" />
-      </div>
-      <div className="grid-lines" />
-      <SimpleParticles />
-      <div className="noise-overlay" />
-    </>
-  )
-}
+import { CheckCircle, ArrowRight, Sparkles, Mail, BookOpen, Shield, LogIn } from 'lucide-react'
 
 export default function ThankYouPage() {
   return (
     <main className="relative min-h-screen flex items-center justify-center px-6 py-12">
-      <SimpleBackground />
+      <div className="noise-overlay" />
 
       <div className="relative z-10 max-w-2xl w-full">
         {/* Logo */}
         <div className="text-center mb-10">
           <Image
-            src="/logo-hvc-white.png"
+            src="/logo-hvc-gradient.png"
             alt="High Value Capital"
             width={180}
             height={65}
@@ -64,97 +22,90 @@ export default function ThankYouPage() {
         </div>
 
         {/* Card principale */}
-        <div className="card-highlight p-8 md:p-12 rounded-2xl text-center glow-gold-intense">
+        <div className="bg-black-card border border-accent/30 p-8 md:p-12 rounded-2xl text-center">
           {/* Icon success */}
-          <div className="animate-scale-in opacity-0 inline-flex items-center justify-center w-20 h-20 bg-gradient-gold rounded-full mb-8 glow-gold">
-            <CheckCircle className="w-12 h-12 text-void" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-accent/20 rounded-full mb-8">
+            <CheckCircle className="w-12 h-12 text-accent" />
           </div>
 
           {/* Titre */}
-          <h1 className="animate-fade-up delay-100 opacity-0 font-display text-3xl md:text-4xl font-medium mb-4">
+          <h1 className="font-display text-3xl md:text-4xl font-medium mb-4 text-ivory">
             Bienvenue dans la{' '}
-            <span className="italic text-gradient-gold">High Value Family</span> !
+            <span className="italic text-accent-gradient">High Value Family</span> !
           </h1>
 
           {/* Message */}
-          <p className="animate-fade-up delay-200 opacity-0 text-pearl text-lg mb-10">
-            Ton paiement a été confirmé avec succès. Ton rôle{' '}
-            <span className="text-champagne font-medium">Premium</span>{' '}
-            Discord a été attribué automatiquement.
+          <p className="text-ivory-muted text-lg mb-10">
+            Ton paiement a ete confirme avec succes. Ton acces{' '}
+            <span className="text-accent font-medium">Premium</span>{' '}
+            est active.
           </p>
 
-          {/* Étapes suivantes */}
-          <div className="animate-fade-up delay-300 opacity-0 bg-glass border border-champagne/10 rounded-xl p-6 md:p-8 mb-10 text-left">
+          {/* Etapes suivantes */}
+          <div className="bg-black-elevated border border-black-border rounded-xl p-6 md:p-8 mb-10 text-left">
             <h2 className="font-display text-xl font-medium mb-6 flex items-center gap-2 text-ivory">
-              <Sparkles className="w-5 h-5 text-champagne" />
-              Prochaines étapes
+              <Sparkles className="w-5 h-5 text-accent" />
+              Prochaines etapes
             </h2>
 
             <div className="space-y-6">
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-10 h-10 bg-champagne/10 rounded-full flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-champagne" />
+                <div className="flex-shrink-0 w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-ivory mb-1">Email de confirmation envoyé</h3>
-                  <p className="text-mist text-sm leading-relaxed">
-                    Vérifie ta boîte mail (et tes spams) pour ton reçu Stripe.
+                  <h3 className="font-medium text-ivory mb-1">Email de confirmation envoye</h3>
+                  <p className="text-ivory-muted text-sm leading-relaxed">
+                    Verifie ta boite mail (et tes spams) pour ton recu de paiement.
                   </p>
                 </div>
               </div>
 
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-10 h-10 bg-champagne/10 rounded-full flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-champagne" />
+                <div className="flex-shrink-0 w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-ivory mb-1">Rôle Premium activé</h3>
-                  <p className="text-mist text-sm leading-relaxed">
-                    Tu as été ajouté au serveur Discord avec l'accès Premium. Tous les channels de formation et trading sont débloqués.
+                  <h3 className="font-medium text-ivory mb-1">Acces Premium active</h3>
+                  <p className="text-ivory-muted text-sm leading-relaxed">
+                    Connecte-toi avec l'email utilise pour le paiement. Tu recevras un code OTP pour acceder a la plateforme.
                   </p>
                 </div>
               </div>
 
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-10 h-10 bg-champagne/10 rounded-full flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-champagne" />
+                <div className="flex-shrink-0 w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-ivory mb-1">Démarre ta formation</h3>
-                  <p className="text-mist text-sm leading-relaxed">
-                    Commence par le Module 1 : Fondations ARD et progresse à ton rythme.
+                  <h3 className="font-medium text-ivory mb-1">Demarre ta formation</h3>
+                  <p className="text-ivory-muted text-sm leading-relaxed">
+                    Commence par le Module 1 : Fondations ARD et progresse a ton rythme.
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* CTA Discord */}
-          <div className="animate-fade-up delay-400 opacity-0">
+          {/* CTA Communaute */}
+          <div>
             <a
-              href="https://discord.gg/nwc8kbxSVt"
-              className="btn-primary text-lg group inline-flex glow-gold"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="https://community.highvaluecapital.club/login"
+              className="inline-flex items-center gap-2 py-4 px-8 bg-accent hover:bg-accent/90 text-black font-bold rounded-xl transition-all text-lg"
             >
-              <span className="flex items-center gap-2">
-                <MessageCircle className="w-5 h-5" />
-                Ouvrir Discord
-                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </span>
+              <LogIn className="w-5 h-5" />
+              Se connecter
+              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </a>
 
-            <p className="text-mist text-sm mt-6">
-              Un problème ? Contacte-nous sur{' '}
+            <p className="text-ivory-dim text-sm mt-6">
+              Un probleme ? Ecris-nous a{' '}
               <a
-                href="https://discord.gg/nwc8kbxSVt"
-                className="text-champagne hover:text-gold-light transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="mailto:contact@highvaluecapital.club"
+                className="text-accent hover:underline"
               >
-                Discord
-              </a>{' '}
-              ou par email.
+                contact@highvaluecapital.club
+              </a>
             </p>
           </div>
         </div>
@@ -163,9 +114,9 @@ export default function ThankYouPage() {
         <div className="text-center mt-10">
           <Link
             href="/"
-            className="text-mist hover:text-champagne transition-colors text-sm"
+            className="text-ivory-dim hover:text-ivory transition-colors text-sm"
           >
-            ← Retour à l'accueil
+            Retour a l'accueil
           </Link>
         </div>
       </div>
