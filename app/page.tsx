@@ -133,7 +133,7 @@ function Hero() {
         {/* Trust */}
         <div className={`reveal-up ${loaded ? 'revealed' : ''} stagger-6 flex flex-wrap justify-center gap-6 sm:gap-10 text-ivory-dim text-sm`}>
           {[
-            { icon: Shield, text: 'Garantie 7 jours' },
+            { icon: Shield, text: 'Formation complete' },
             { icon: Users, text: '150+ membres actifs' },
             { icon: Star, text: 'Partenaires officiels' },
           ].map((item, i) => (
@@ -604,14 +604,13 @@ function Guarantee() {
       <div className={`reveal-up ${revealed ? 'revealed' : ''} max-w-2xl mx-auto px-5 sm:px-8 text-center`}>
         <Shield className="w-12 h-12 text-accent mx-auto mb-6 opacity-80" />
         <h2 className="font-display text-display-md mb-6 text-ivory">
-          Essaie sans risque
+          Pret a passer au niveau superieur ?
         </h2>
         <p className="text-xl text-ivory-muted mb-3 leading-relaxed">
-          Teste la formation pendant <span className="text-accent font-medium">7 jours</span>.
+          Rejoins <span className="text-accent font-medium">150+ membres</span> qui ont transforme leur trading.
         </p>
         <p className="text-ivory-dim text-base leading-relaxed">
-          Si tu n'es pas satisfait, contacte-moi et je te rembourse.
-          <br />Pas de questions. Pas de justification.
+          49EUR/mois, sans engagement, resiliable a tout moment.
         </p>
       </div>
     </section>

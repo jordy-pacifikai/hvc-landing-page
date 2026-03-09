@@ -176,7 +176,7 @@ function CheckoutContent() {
                 'Groupe prive Premium sur Discord',
                 'Lives hebdomadaires exclusifs',
                 'Support communaute active 24/7',
-                'Garantie satisfait ou rembourse 7 jours',
+                'Sans engagement, resiliable a tout moment',
               ].map((item, index) => (
                 <li key={index} className="flex items-start gap-3 text-ivory-muted">
                   <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
