@@ -80,7 +80,7 @@ export default function ThankYouPage() {
                 <div>
                   <h3 className="font-medium text-ivory mb-1">Demarre ta formation</h3>
                   <p className="text-ivory-muted text-sm leading-relaxed">
-                    Commence par le Module 1 : Fondations ARD et progresse a ton rythme.
+                    Accede a tous les modules de formation et progresse a ton rythme.
                   </p>
                 </div>
               </div>
