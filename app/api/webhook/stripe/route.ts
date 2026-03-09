@@ -6,6 +6,10 @@ const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!
 const DISCORD_GUILD_ID = '1472369949141106806'
 const DISCORD_PREMIUM_ROLE_ID = '1475058567479427157'
 
+const COMMUNITY_SUPABASE_URL = 'https://antogqfovjlkilqgiwdk.supabase.co'
+const COMMUNITY_SUPABASE_SERVICE_KEY = process.env.COMMUNITY_SUPABASE_SERVICE_KEY!
+const BREVO_API_KEY = process.env.BREVO_API_KEY
+
 async function verifyStripeSignature(
   payload: string,
   signature: string,
@@ -85,6 +89,67 @@ async function removePremiumRole(discordUserId: string) {
   console.log(`[Webhook] Removed @Premium from Discord user ${discordUserId}`)
 }
 
+async function activateCommunityUser(email: string, stripeSubscriptionId: string) {
+  try {
+    const res = await fetch(`${COMMUNITY_SUPABASE_URL}/rest/v1/rpc/activate_paypal_subscription`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': COMMUNITY_SUPABASE_SERVICE_KEY,
+        'Authorization': `Bearer ${COMMUNITY_SUPABASE_SERVICE_KEY}`,
+      },
+      body: JSON.stringify({
+        p_email: email,
+        p_subscription_id: stripeSubscriptionId,
+        p_payer_id: null,
+      }),
+    })
+    const data = await res.json()
+    console.log(`[Webhook] Community activation for ${email}:`, data)
+
+    if (data?.user_exists === false && BREVO_API_KEY) {
+      await sendWelcomeEmail(email)
+    }
+
+    return data
+  } catch (err) {
+    console.error(`[Webhook] Community activation failed for ${email}:`, err)
+  }
+}
+
+async function sendWelcomeEmail(email: string) {
+  try {
+    await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': BREVO_API_KEY!,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name: 'High Value Capital', email: 'newsletter@highvaluecapital.club' },
+        to: [{ email }],
+        subject: 'Bienvenue dans la communaute HVC !',
+        htmlContent: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#0a0a0a;color:#e8e4dc;">
+          <img src="https://www.highvaluecapital.club/logo-hvc-gradient.png" alt="High Value Capital" style="width:160px;margin-bottom:24px;" />
+          <h2 style="color:#d4a843;">Bienvenue dans la communaute HVC !</h2>
+          <p>Ton acces Premium est active. Voici ce qui t'attend :</p>
+          <ul>
+            <li>Formation complete ARD (20+ heures de contenu)</li>
+            <li>Communaute privee Premium</li>
+            <li>Analyses de trades personnalisees</li>
+          </ul>
+          <p>Connecte-toi avec ton email (<strong>${email}</strong>) — tu recevras un code OTP :</p>
+          <a href="https://community.highvaluecapital.club/login" style="display:inline-block;padding:12px 24px;background:#d4a843;color:#0a0a0a;text-decoration:none;border-radius:8px;font-weight:bold;margin-top:12px;">Se connecter</a>
+          <p style="margin-top:24px;color:#888;font-size:12px;">High Value Capital — Formation Trading Premium</p>
+        </div>`,
+      }),
+    })
+    console.log(`[Webhook] Welcome email sent to ${email}`)
+  } catch (err) {
+    console.error(`[Webhook] Welcome email failed for ${email}:`, err)
+  }
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.text()
   const signature = req.headers.get('stripe-signature')
@@ -152,6 +217,12 @@ export async function POST(req: NextRequest) {
       }
     } else {
       console.log(`[Webhook] No discord_user_id in session ${session.id}`)
+    }
+
+    // Activate community user via Supabase
+    const customerEmail = session.customer_details?.email || session.customer_email
+    if (customerEmail && COMMUNITY_SUPABASE_SERVICE_KEY) {
+      await activateCommunityUser(customerEmail, session.subscription || session.id)
     }
   }
 

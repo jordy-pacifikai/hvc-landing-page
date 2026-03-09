@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY
 
+const PRICES: Record<string, { priceId: string; mode: 'payment' | 'subscription' }> = {
+  test: { priceId: 'price_1T98h7DFDOh4UH0d1bolcEQf', mode: 'payment' },
+  monthly: { priceId: 'price_1T3XqIDFDOh4UH0d1crOCUUU', mode: 'subscription' },
+  yearly: { priceId: 'price_1T98hGDFDOh4UH0dD6kh4MMc', mode: 'subscription' },
+}
+
 export async function POST(req: NextRequest) {
   if (!STRIPE_SECRET_KEY) {
     return NextResponse.json(
@@ -12,27 +18,27 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json().catch(() => ({}))
-    const discordId = body.discord_id || ''
-    const discordUsername = body.discord_username || ''
-    const discordToken = body.discord_token || ''
+    const plan = body.plan || 'monthly'
+    const priceConfig = PRICES[plan]
 
-    const params: Record<string, string> = {
-      'mode': 'subscription',
-      'line_items[0][price]': 'price_1T3XqIDFDOh4UH0d1crOCUUU',
-      'line_items[0][quantity]': '1',
-      'success_url': 'https://www.highvaluecapital.club/merci',
-      'cancel_url': 'https://www.highvaluecapital.club/',
-      'allow_promotion_codes': 'true',
-      'billing_address_collection': 'auto',
+    if (!priceConfig) {
+      return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
 
-    // Store Discord info in subscription metadata
-    if (discordId) {
-      params['subscription_data[metadata][discord_user_id]'] = discordId
-      params['subscription_data[metadata][discord_username]'] = discordUsername
-      params['subscription_data[metadata][discord_token]'] = discordToken
-      params['metadata[discord_user_id]'] = discordId
-      params['metadata[discord_username]'] = discordUsername
+    const origin = req.headers.get('origin') || 'https://www.highvaluecapital.club'
+
+    const params: Record<string, string> = {
+      'mode': priceConfig.mode,
+      'line_items[0][price]': priceConfig.priceId,
+      'line_items[0][quantity]': '1',
+      'success_url': `${origin}/merci?session_id={CHECKOUT_SESSION_ID}`,
+      'cancel_url': `${origin}/${plan === 'test' ? 'test-checkout' : 'checkout'}`,
+      'allow_promotion_codes': 'true',
+      'metadata[plan]': plan,
+    }
+
+    if (priceConfig.mode === 'subscription') {
+      params['subscription_data[metadata][plan]'] = plan
     }
 
     const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
@@ -50,7 +56,7 @@ export async function POST(req: NextRequest) {
       throw new Error(session.error?.message || 'Failed to create checkout session')
     }
 
-    return NextResponse.json({ sessionId: session.id })
+    return NextResponse.json({ url: session.url })
   } catch (error) {
     console.error('Checkout session error:', error)
     return NextResponse.json(

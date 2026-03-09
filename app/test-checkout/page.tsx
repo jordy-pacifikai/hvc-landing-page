@@ -4,122 +4,29 @@ import { Suspense, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Loader2, ArrowLeft, CheckCircle, Shield, Zap, CreditCard } from 'lucide-react'
-import { PayPalScriptProvider, PayPalButtons, FUNDING } from '@paypal/react-paypal-js'
-
-const COMMUNITY_API = 'https://community.highvaluecapital.club/api/paypal'
-const PAYPAL_CLIENT_ID = 'ASvt7ImCDztqbX6HPpcVgPcHDf2tdquGLLFuH_KQlZ1uQq-aEtGYdHRUkRcrdFCJOpWOtcRNSz_rU12l'
-
-function PaymentButtons({ onSuccess }: { onSuccess: () => void }) {
-  const [activating, setActivating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const handleCreateOrder = async () => {
-    setError(null)
-    const res = await fetch(`${COMMUNITY_API}/create-order`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan: 'test' }),
-    })
-    const data = await res.json()
-    if (!res.ok || !data.id) {
-      throw new Error(data.error || 'Erreur creation commande')
-    }
-    return data.id
-  }
-
-  const handleApprove = async (data: { orderID: string }) => {
-    setActivating(true)
-    setError(null)
-    try {
-      const res = await fetch(`${COMMUNITY_API}/activate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderID: data.orderID }),
-      })
-      const result = await res.json()
-      if (!res.ok) {
-        throw new Error(result.error || 'Erreur activation')
-      }
-      onSuccess()
-    } catch (err: any) {
-      setError(err.message || "Erreur lors de l'activation")
-      setActivating(false)
-    }
-  }
-
-  if (activating) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 animate-spin text-accent" />
-        <span className="ml-3 text-ivory-muted text-sm">Activation de ton abonnement...</span>
-      </div>
-    )
-  }
-
-  return (
-    <div>
-      {error && (
-        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-          <p className="text-red-400 text-sm text-center">{error}</p>
-        </div>
-      )}
-      <div className="bg-white rounded-xl p-4">
-        <PayPalScriptProvider
-          options={{
-            clientId: PAYPAL_CLIENT_ID,
-            currency: 'EUR',
-            intent: 'capture',
-            locale: 'fr_FR',
-            components: 'buttons',
-          }}
-        >
-          <PayPalButtons
-            fundingSource={FUNDING.CARD}
-            style={{
-              layout: 'vertical',
-              color: 'black',
-              shape: 'rect',
-              label: 'pay',
-              height: 50,
-            }}
-            createOrder={handleCreateOrder}
-            onApprove={handleApprove}
-            onError={(err) => {
-              console.error('PayPal card error:', err)
-              setError('Erreur de paiement. Veuillez reessayer.')
-            }}
-            onCancel={() => setError(null)}
-          />
-        </PayPalScriptProvider>
-      </div>
-    </div>
-  )
-}
 
 function TestCheckoutContent() {
-  const [success, setSuccess] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  if (success) {
-    return (
-      <main className="relative min-h-screen flex items-center justify-center px-6 py-12">
-        <div className="noise-overlay" />
-        <div className="relative z-10 max-w-lg w-full text-center">
-          <div className="card-accent p-8 md:p-12">
-            <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-6" />
-            <h2 className="font-display text-2xl font-medium text-ivory mb-4">Paiement confirme !</h2>
-            <p className="text-ivory-muted mb-6">
-              Ton acces Premium est active. Connecte-toi avec ton email PayPal pour acceder a la formation.
-            </p>
-            <a
-              href="https://community.highvaluecapital.club/login"
-              className="btn-primary"
-            >
-              Se connecter
-            </a>
-          </div>
-        </div>
-      </main>
-    )
+  const handleCheckout = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: 'test' }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || 'Erreur creation session')
+      }
+      window.location.href = data.url
+    } catch (err: any) {
+      setError(err.message || 'Erreur de paiement')
+      setLoading(false)
+    }
   }
 
   return (
@@ -200,7 +107,31 @@ function TestCheckoutContent() {
                   <span className="text-ivory-ghost text-xs">SSL</span>
                 </div>
               </div>
-              <PaymentButtons onSuccess={() => setSuccess(true)} />
+
+              {error && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <p className="text-red-400 text-sm text-center">{error}</p>
+                </div>
+              )}
+
+              <button
+                onClick={handleCheckout}
+                disabled={loading}
+                className="w-full py-4 bg-accent hover:bg-accent/90 text-black font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Redirection...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-5 h-5" />
+                    Payer 1 EUR par carte
+                  </>
+                )}
+              </button>
+
               <div className="flex items-center justify-center gap-4 mt-4 opacity-50">
                 <svg viewBox="0 0 48 32" className="h-6" fill="none"><rect width="48" height="32" rx="4" fill="#1A1F71"/><path d="M19.5 21h-3l1.9-11h3l-1.9 11zm12.8-10.7c-.6-.2-1.5-.5-2.7-.5-3 0-5.1 1.5-5.1 3.7 0 1.6 1.5 2.5 2.6 3.1 1.1.5 1.5.9 1.5 1.4 0 .7-.9 1.1-1.7 1.1-1.1 0-1.8-.2-2.7-.5l-.4-.2-.4 2.4c.7.3 1.9.6 3.2.6 3.2 0 5.2-1.5 5.2-3.8 0-1.3-.8-2.2-2.5-3-1-.5-1.7-.9-1.7-1.4 0-.5.5-1 1.7-1 1 0 1.7.2 2.2.4l.3.1.5-2.4zm7.9-.3h-2.3c-.7 0-1.3.2-1.6 1l-4.5 10h3.2l.6-1.7h3.9l.4 1.7h2.8l-2.5-11zm-3.7 7.1l1.6-4.2.9 4.2h-2.5zM16.3 10l-3 7.5-.3-1.5c-.5-1.8-2.2-3.8-4.1-4.8l2.7 9.8h3.2l4.8-11h-3.3z" fill="#fff"/><path d="M10.5 10H5.8l-.1.3c3.8.9 6.3 3.2 7.3 5.9l-1-5.1c-.2-.8-.7-1-1.5-1.1z" fill="#F9A533"/></svg>
                 <svg viewBox="0 0 48 32" className="h-6" fill="none"><rect width="48" height="32" rx="4" fill="#252525"/><circle cx="19" cy="16" r="8" fill="#EB001B"/><circle cx="29" cy="16" r="8" fill="#F79E1B"/><path d="M24 10.3a8 8 0 010 11.4 8 8 0 000-11.4z" fill="#FF5F00"/></svg>
