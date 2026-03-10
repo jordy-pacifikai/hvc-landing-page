@@ -450,7 +450,7 @@ function Partners() {
       width: 160,
       height: 40,
       url: 'https://blueberryfunded.com/?utm_source=affiliate&campaign=highvaluecapital&ref=32',
-      promo: 'Code HVC15 — 15% off',
+      promo: 'Code HVC30 — 30% off',
     },
     {
       name: 'FX Replay',
