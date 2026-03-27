@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// TODO: MIGRATION — Stan Store webhooks will replace this Stripe webhook handler.
+// Configure Stan Store webhook to POST to /api/webhook/stan with payment events.
+// This handler is kept active for existing Stripe subscribers (cancellations, renewals).
+
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY!
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!

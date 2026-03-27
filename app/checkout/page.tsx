@@ -3,41 +3,32 @@
 import { Suspense, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Loader2, ArrowLeft, CheckCircle, Shield, Zap, CreditCard } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Shield, Zap, Crown, Star } from 'lucide-react'
 
-type Plan = 'monthly' | 'yearly'
-
-const PLANS = {
-  monthly: { label: '1 mois', price: 49, perMonth: 49 },
-  yearly: { label: '12 mois', price: 294, perMonth: 24.5 },
-} as const
+const STAN_MONTHLY_URL = 'https://stan.store/highvaluecapital/p/hvc-community'
+const STAN_ANNUAL_URL = 'https://stan.store/highvaluecapital/p/hvc-community-annuel'
 
 function CheckoutContent() {
-  const [plan, setPlan] = useState<Plan>('monthly')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [plan, setPlan] = useState<'monthly' | 'annual'>('annual')
 
-  const currentPlan = PLANS[plan]
-
-  const handleCheckout = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.url) {
-        throw new Error(data.error || 'Erreur creation session')
-      }
-      window.location.href = data.url
-    } catch (err: any) {
-      setError(err.message || 'Erreur de paiement')
-      setLoading(false)
-    }
+  const plans = {
+    monthly: {
+      price: 49,
+      period: '/mois',
+      subtitle: 'Sans engagement',
+      url: STAN_MONTHLY_URL,
+      badge: null,
+    },
+    annual: {
+      price: 294,
+      period: '/an',
+      subtitle: 'Soit 24,50\u20AC/mois',
+      url: STAN_ANNUAL_URL,
+      badge: '-50%',
+    },
   }
+
+  const selected = plans[plan]
 
   return (
     <main className="relative min-h-screen flex items-center justify-center px-6 py-12">
@@ -63,130 +54,107 @@ function CheckoutContent() {
           />
 
           <h1 className="font-display text-3xl md:text-4xl font-medium text-ivory mb-3">
-            Formation Trading <span className="italic text-accent-gradient">Premium</span>
+            Rejoins la communaut&eacute; <span className="italic text-accent-gradient">HVC</span>
           </h1>
-          <p className="text-ivory-muted">Paiement securise</p>
+          <p className="text-ivory-muted max-w-md mx-auto">
+            Acc&egrave;de &agrave; la formation, aux analyses, au journal IA et au r&eacute;seau de traders les plus ambitieux.
+          </p>
+        </div>
+
+        {/* Plan Toggle */}
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex bg-black-card border border-black-border rounded-xl p-1">
+            <button
+              onClick={() => setPlan('monthly')}
+              className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                plan === 'monthly'
+                  ? 'bg-accent text-black'
+                  : 'text-ivory-muted hover:text-ivory'
+              }`}
+            >
+              Mensuel
+            </button>
+            <button
+              onClick={() => setPlan('annual')}
+              className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                plan === 'annual'
+                  ? 'bg-accent text-black'
+                  : 'text-ivory-muted hover:text-ivory'
+              }`}
+            >
+              Annuel
+              <span className="bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded-full font-bold">
+                -50%
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Card principale */}
         <div className="bg-black-card border border-black-border rounded-2xl p-8 md:p-12">
-          <div>
+          {/* Prix */}
+          <div className="text-center mb-8">
+            <div className="flex items-baseline justify-center gap-1">
+              <span className="font-display text-5xl md:text-6xl font-bold text-ivory">
+                {selected.price}&euro;
+              </span>
+              <span className="text-ivory-muted text-lg">{selected.period}</span>
+            </div>
+            <p className="text-ivory-dim text-sm mt-2">
+              {selected.subtitle}
+              {plan === 'annual' && (
+                <span className="text-green-400 font-medium"> &mdash; &Eacute;conomise 294&euro;/an</span>
+              )}
+            </p>
+          </div>
+
+          {/* Avantages */}
+          <div className="mb-8">
             <h3 className="font-display text-lg font-medium mb-5 flex items-center gap-2 text-ivory">
               <Zap className="w-5 h-5 text-accent" />
-              Ce que tu vas recevoir
+              Tout ce qui est inclus
             </h3>
             <ul className="space-y-3">
               {[
-                'Acces complet a la formation ARD (7+ modules)',
-                'Groupe prive Premium sur Discord',
-                'Lives hebdomadaires exclusifs',
-                'Support communaute active 24/7',
-                'Sans engagement, resiliable a tout moment',
+                { icon: Star, text: 'Formation compl\u00e8te ARD (7+ modules)' },
+                { icon: Crown, text: 'Communaut\u00e9 priv\u00e9e de traders' },
+                { icon: CheckCircle, text: 'Analyses de march\u00e9 quotidiennes' },
+                { icon: CheckCircle, text: 'Journal de trading intelligent avec IA' },
+                { icon: CheckCircle, text: 'Lives hebdomadaires exclusifs' },
+                { icon: CheckCircle, text: 'Syst\u00e8me de gamification et r\u00e9compenses' },
+                { icon: CheckCircle, text: 'R\u00e9siliable \u00e0 tout moment' },
               ].map((item, index) => (
                 <li key={index} className="flex items-start gap-3 text-ivory-muted">
-                  <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-                  <span>{item}</span>
+                  <item.icon className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                  <span>{item.text}</span>
                 </li>
               ))}
             </ul>
-
-            {/* Plan toggle */}
-            <div className="mt-8 grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setPlan('monthly')}
-                className={`relative p-4 rounded-xl border transition-all text-left ${
-                  plan === 'monthly'
-                    ? 'border-accent bg-accent/10'
-                    : 'border-black-border hover:border-black-hover'
-                }`}
-              >
-                <p className="text-sm text-ivory-dim mb-1">Mensuel</p>
-                <p className="font-display text-2xl font-medium text-ivory">49&euro;<span className="text-sm text-ivory-dim">/mois</span></p>
-              </button>
-              <button
-                onClick={() => setPlan('yearly')}
-                className={`relative p-4 rounded-xl border transition-all text-left ${
-                  plan === 'yearly'
-                    ? 'border-accent bg-accent/10'
-                    : 'border-black-border hover:border-black-hover'
-                }`}
-              >
-                <span className="absolute -top-2.5 right-3 bg-accent text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  -50%
-                </span>
-                <p className="text-sm text-ivory-dim mb-1">Annuel</p>
-                <p className="font-display text-2xl font-medium text-ivory">24.50&euro;<span className="text-sm text-ivory-dim">/mois</span></p>
-                <p className="text-xs text-ivory-dim mt-1">294&euro; facture une fois</p>
-              </button>
-            </div>
-
-            {/* Prix recap */}
-            <div className="mt-4 p-5 bg-black-elevated border border-accent/20 rounded-xl">
-              <div className="flex justify-between items-center">
-                <span className="text-ivory-muted">Total</span>
-                <span className="font-display text-3xl font-medium text-accent">
-                  {currentPlan.price}&euro;
-                  {plan === 'monthly' && <span className="text-lg">/mois</span>}
-                </span>
-              </div>
-              <p className="text-ivory-dim text-xs mt-2">
-                {plan === 'monthly'
-                  ? 'Sans engagement - Resiliable a tout moment'
-                  : '12 mois d\'acces - Soit 24.50\u20ac/mois au lieu de 49\u20ac'}
-              </p>
-            </div>
-
-            {/* Payment */}
-            <div className="mt-8">
-              <div className="flex items-center gap-2 mb-4">
-                <CreditCard className="w-5 h-5 text-accent" />
-                <span className="text-ivory font-medium">Payer par carte bancaire</span>
-                <div className="ml-auto flex items-center gap-1.5">
-                  <Shield className="w-4 h-4 text-ivory-ghost" />
-                  <span className="text-ivory-ghost text-xs">SSL</span>
-                </div>
-              </div>
-
-              {error && (
-                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                  <p className="text-red-400 text-sm text-center">{error}</p>
-                </div>
-              )}
-
-              <button
-                onClick={handleCheckout}
-                disabled={loading}
-                className="w-full py-4 bg-accent hover:bg-accent/90 text-black font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Redirection vers Stripe...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="w-5 h-5" />
-                    Payer {currentPlan.price}&euro; par carte
-                  </>
-                )}
-              </button>
-
-              <div className="flex items-center justify-center gap-4 mt-4 opacity-50">
-                <svg viewBox="0 0 48 32" className="h-6" fill="none"><rect width="48" height="32" rx="4" fill="#1A1F71"/><path d="M19.5 21h-3l1.9-11h3l-1.9 11zm12.8-10.7c-.6-.2-1.5-.5-2.7-.5-3 0-5.1 1.5-5.1 3.7 0 1.6 1.5 2.5 2.6 3.1 1.1.5 1.5.9 1.5 1.4 0 .7-.9 1.1-1.7 1.1-1.1 0-1.8-.2-2.7-.5l-.4-.2-.4 2.4c.7.3 1.9.6 3.2.6 3.2 0 5.2-1.5 5.2-3.8 0-1.3-.8-2.2-2.5-3-1-.5-1.7-.9-1.7-1.4 0-.5.5-1 1.7-1 1 0 1.7.2 2.2.4l.3.1.5-2.4zm7.9-.3h-2.3c-.7 0-1.3.2-1.6 1l-4.5 10h3.2l.6-1.7h3.9l.4 1.7h2.8l-2.5-11zm-3.7 7.1l1.6-4.2.9 4.2h-2.5zM16.3 10l-3 7.5-.3-1.5c-.5-1.8-2.2-3.8-4.1-4.8l2.7 9.8h3.2l4.8-11h-3.3z" fill="#fff"/><path d="M10.5 10H5.8l-.1.3c3.8.9 6.3 3.2 7.3 5.9l-1-5.1c-.2-.8-.7-1-1.5-1.1z" fill="#F9A533"/></svg>
-                <svg viewBox="0 0 48 32" className="h-6" fill="none"><rect width="48" height="32" rx="4" fill="#252525"/><circle cx="19" cy="16" r="8" fill="#EB001B"/><circle cx="29" cy="16" r="8" fill="#F79E1B"/><path d="M24 10.3a8 8 0 010 11.4 8 8 0 000-11.4z" fill="#FF5F00"/></svg>
-              </div>
-            </div>
           </div>
+
+          {/* CTA */}
+          <a
+            href={selected.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-4 bg-accent hover:bg-accent/90 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-lg"
+          >
+            {plan === 'annual' ? 'Rejoindre \u2014 294\u20AC/an' : 'Rejoindre \u2014 49\u20AC/mois'}
+          </a>
+
+          <p className="text-ivory-dim text-xs text-center mt-4">
+            Paiement 100% s&eacute;curis&eacute; par carte bancaire
+          </p>
         </div>
 
-        {/* Footer securite + connexion */}
+        {/* Footer */}
         <div className="text-center mt-8 space-y-4">
           <div className="inline-flex items-center gap-2 text-ivory-dim text-sm">
             <Shield className="w-4 h-4 text-accent/50" />
-            <span>Paiement 100% securise - Donnees protegees</span>
+            <span>Paiement 100% s\u00e9curis\u00e9 &mdash; Donn\u00e9es prot\u00e9g\u00e9es</span>
           </div>
           <p className="text-ivory-dim text-sm">
-            Deja membre ?{' '}
+            D&eacute;j&agrave; membre ?{' '}
             <a
               href="https://community.highvaluecapital.club/login"
               className="text-accent hover:underline"
