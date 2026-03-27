@@ -3,13 +3,18 @@
 import { Suspense, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft, CheckCircle, Shield, Zap, Crown, Star } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Shield, Zap, Crown, Star, Loader2, Mail } from 'lucide-react'
 
 const STAN_MONTHLY_URL = 'https://stan.store/highvaluecapital/p/hvc-community'
 const STAN_ANNUAL_URL = 'https://stan.store/highvaluecapital/p/hvc-community-annuel'
+const ACTIVATE_URL = 'https://community.highvaluecapital.club/api/admin/activate-stan'
+const ACTIVATE_SECRET = 'hvc-grant-2026'
 
 function CheckoutContent() {
   const [plan, setPlan] = useState<'monthly' | 'annual'>('annual')
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const plans = {
     monthly: {
@@ -17,18 +22,42 @@ function CheckoutContent() {
       period: '/mois',
       subtitle: 'Sans engagement',
       url: STAN_MONTHLY_URL,
-      badge: null,
     },
     annual: {
       price: 294,
       period: '/an',
       subtitle: 'Soit 24,50\u20AC/mois',
       url: STAN_ANNUAL_URL,
-      badge: '-50%',
     },
   }
 
   const selected = plans[plan]
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email || !email.includes('@')) {
+      setError('Entre ton email pour continuer')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      // Pre-activate account in Supabase + send welcome email
+      await fetch(ACTIVATE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, secret: ACTIVATE_SECRET, plan }),
+      })
+      // Redirect to Stan checkout regardless of activation result
+      // (existing users will just get a "already exists" response, which is fine)
+      window.location.href = selected.url
+    } catch {
+      // Even if activation fails, redirect to Stan — account can be activated later
+      window.location.href = selected.url
+    }
+  }
 
   return (
     <main className="relative min-h-screen flex items-center justify-center px-6 py-12">
@@ -132,15 +161,38 @@ function CheckoutContent() {
             </ul>
           </div>
 
-          {/* CTA */}
-          <a
-            href={selected.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full py-4 bg-accent hover:bg-accent/90 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-lg"
-          >
-            {plan === 'annual' ? 'Rejoindre \u2014 294\u20AC/an' : 'Rejoindre \u2014 49\u20AC/mois'}
-          </a>
+          {/* Email + CTA */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ivory-dim" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setError('') }}
+                  placeholder="Ton email"
+                  required
+                  className="w-full pl-12 pr-4 py-4 bg-black-elevated border border-black-border rounded-xl text-ivory placeholder:text-ivory-dim focus:border-accent focus:outline-none transition-colors"
+                />
+              </div>
+              {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-4 bg-accent hover:bg-accent/90 disabled:opacity-50 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-lg"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Redirection...
+                </>
+              ) : (
+                plan === 'annual' ? 'Rejoindre \u2014 294\u20AC/an' : 'Rejoindre \u2014 49\u20AC/mois'
+              )}
+            </button>
+          </form>
 
           <p className="text-ivory-dim text-xs text-center mt-4">
             Paiement 100% s&eacute;curis&eacute; par carte bancaire
