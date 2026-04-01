@@ -27,7 +27,17 @@ const config: Config = {
           DEFAULT: '#2563EB',
           hover: '#3B82F6',
           muted: 'rgba(37, 99, 235, 0.15)',
+          glow: 'rgba(37, 99, 235, 0.4)',
+          soft: 'rgba(37, 99, 235, 0.08)',
         },
+      },
+      borderColor: {
+        'white/6': 'rgba(255, 255, 255, 0.06)',
+        'white/12': 'rgba(255, 255, 255, 0.12)',
+      },
+      backgroundColor: {
+        'glass-card': 'rgba(22, 22, 22, 0.6)',
+        'glass-surface': 'rgba(255, 255, 255, 0.03)',
       },
       fontFamily: {
         display: ['"DM Serif Display"', 'Georgia', '"Times New Roman"', 'serif'],

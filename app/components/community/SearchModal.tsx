@@ -214,7 +214,7 @@ function ForumPostResultItem({
 
 // ─── Section Header ───────────────────────────────────────────────────────────
 
-function SectionHeader({ icon: Icon, label, count }: { icon: React.ElementType; label: string; count: number }) {
+function SectionHeader({ icon: Icon, label, count }: { icon: React.ElementType<{ className?: string }>; label: string; count: number }) {
   return (
     <div className="flex items-center gap-2 px-4 py-2 mt-2">
       <Icon className="w-3.5 h-3.5 text-champagne/70" />

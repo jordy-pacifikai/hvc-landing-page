@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Providers from './providers'
+import SmoothScroll from './components/providers/SmoothScroll'
+import ParticlesBackground from './components/effects/ParticlesBackground'
 
 export const metadata: Metadata = {
   title: 'High Value Capital | Formation Trading Forex',
@@ -32,8 +34,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body className="antialiased">
-        <Providers>{children}</Providers>
+      <body className="antialiased grain">
+        <Providers>
+          <SmoothScroll>
+            <ParticlesBackground />
+            {children}
+          </SmoothScroll>
+        </Providers>
       </body>
     </html>
   )
