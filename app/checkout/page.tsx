@@ -1,62 +1,108 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft, CheckCircle, Shield, Zap, Crown, Star, Loader2, Mail } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Shield, Zap, Crown, Star, PartyPopper } from 'lucide-react'
 
-const STAN_MONTHLY_URL = 'https://stan.store/highvaluecapital/p/hvc-community'
-const STAN_ANNUAL_URL = 'https://stan.store/highvaluecapital/p/hvc-community-annuel'
-const ACTIVATE_URL = 'https://community.highvaluecapital.club/api/admin/activate-stan'
-const ACTIVATE_SECRET = 'hvc-grant-2026'
+const FREEMIUS_PLAN_ID = 44683
+
+// Lazy SDK loader — instantiated only on first click (avoids hydration side-effects)
+type FsCheckout = {
+  open: (opts: Record<string, unknown>) => void
+  close: () => void
+}
+let checkoutInstance: FsCheckout | null = null
+let sdkPromise: Promise<FsCheckout> | null = null
+
+function getCheckout(): Promise<FsCheckout> {
+  if (checkoutInstance) return Promise.resolve(checkoutInstance)
+  if (sdkPromise) return sdkPromise
+  sdkPromise = import('@freemius/checkout').then(({ Checkout: CheckoutClass }) => {
+    checkoutInstance = new CheckoutClass({
+      product_id: Number(process.env.NEXT_PUBLIC_FREEMIUS_PRODUCT_ID ?? '26997'),
+      public_key: process.env.NEXT_PUBLIC_FREEMIUS_PUBLIC_KEY ?? 'pk_03572c613cb51e929178f3788e308',
+    }) as FsCheckout
+    return checkoutInstance
+  })
+  return sdkPromise
+}
+
+const plans = [
+  {
+    id: 'monthly' as const,
+    name: 'Mensuel',
+    price: 49,
+    period: '/mois',
+    subtitle: 'Sans engagement',
+    badge: null,
+    savings: null,
+  },
+  {
+    id: 'annual' as const,
+    name: 'Annuel',
+    price: 294,
+    period: '/an',
+    subtitle: 'Soit 24,50\u20AC/mois',
+    badge: '-50%',
+    savings: '\u00C9conomise 294\u20AC',
+  },
+  {
+    id: 'lifetime' as const,
+    name: '\u00C0 vie',
+    price: 588,
+    period: '',
+    subtitle: 'Paiement unique',
+    badge: 'BEST DEAL',
+    savings: 'Acc\u00e8s permanent',
+  },
+]
 
 function CheckoutContent() {
-  const [plan, setPlan] = useState<'monthly' | 'annual'>('annual')
-  const [email, setEmail] = useState('')
+  const [selected, setSelected] = useState<'monthly' | 'annual' | 'lifetime'>('annual')
+  const [paid, setPaid] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const paidRef = useRef(setPaid)
+  paidRef.current = setPaid
 
-  const plans = {
-    monthly: {
-      price: 49,
-      period: '/mois',
-      subtitle: 'Sans engagement',
-      url: STAN_MONTHLY_URL,
-    },
-    annual: {
-      price: 294,
-      period: '/an',
-      subtitle: 'Soit 24,50\u20AC/mois',
-      url: STAN_ANNUAL_URL,
-    },
-  }
-
-  const selected = plans[plan]
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email || !email.includes('@')) {
-      setError('Entre ton email pour continuer')
-      return
-    }
-
+  const handleCheckout = useCallback(async () => {
     setLoading(true)
-    setError('')
-
     try {
-      // Pre-activate account in Supabase + send welcome email
-      await fetch(ACTIVATE_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, secret: ACTIVATE_SECRET, plan }),
+      const checkout = await getCheckout()
+      checkout.open({
+        plan_id: FREEMIUS_PLAN_ID,
+        billing_cycle: selected,
+        licenses: 1,
+        currency: 'eur',
+        success: () => { paidRef.current(true) },
+        afterClose: () => { setLoading(false) },
       })
-      // Redirect to Stan checkout regardless of activation result
-      // (existing users will just get a "already exists" response, which is fine)
-      window.location.href = selected.url
-    } catch {
-      // Even if activation fails, redirect to Stan — account can be activated later
-      window.location.href = selected.url
+    } catch (err) {
+      console.error('[checkout] open failed', err)
+      setLoading(false)
     }
+  }, [selected])
+
+  if (paid) {
+    return (
+      <main className="relative min-h-screen flex items-center justify-center px-6 py-12">
+        <div className="noise-overlay" />
+        <div className="relative z-10 max-w-lg w-full text-center">
+          <PartyPopper className="w-16 h-16 text-accent mx-auto mb-6" />
+          <h1 className="font-display text-3xl font-bold mb-4 text-ivory">Paiement confirm&eacute; !</h1>
+          <p className="text-ivory-muted mb-8">
+            Tu vas recevoir un email avec tes acc&egrave;s. Connecte-toi pour acc&eacute;der &agrave; la plateforme.
+          </p>
+          <button
+            type="button"
+            onClick={() => { window.location.href = 'https://community.highvaluecapital.club/login' }}
+            className="bg-accent hover:bg-accent/90 text-black font-bold py-3.5 px-8 rounded-xl text-base transition-all"
+          >
+            Se connecter
+          </button>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -90,53 +136,8 @@ function CheckoutContent() {
           </p>
         </div>
 
-        {/* Plan Toggle */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex bg-black-card border border-black-border rounded-xl p-1">
-            <button
-              onClick={() => setPlan('monthly')}
-              className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                plan === 'monthly'
-                  ? 'bg-accent text-black'
-                  : 'text-ivory-muted hover:text-ivory'
-              }`}
-            >
-              Mensuel
-            </button>
-            <button
-              onClick={() => setPlan('annual')}
-              className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-                plan === 'annual'
-                  ? 'bg-accent text-black'
-                  : 'text-ivory-muted hover:text-ivory'
-              }`}
-            >
-              Annuel
-              <span className="bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded-full font-bold">
-                -50%
-              </span>
-            </button>
-          </div>
-        </div>
-
         {/* Card principale */}
         <div className="bg-black-card border border-black-border rounded-2xl p-8 md:p-12">
-          {/* Prix */}
-          <div className="text-center mb-8">
-            <div className="flex items-baseline justify-center gap-1">
-              <span className="font-display text-5xl md:text-6xl font-bold text-ivory">
-                {selected.price}&euro;
-              </span>
-              <span className="text-ivory-muted text-lg">{selected.period}</span>
-            </div>
-            <p className="text-ivory-dim text-sm mt-2">
-              {selected.subtitle}
-              {plan === 'annual' && (
-                <span className="text-green-400 font-medium"> &mdash; &Eacute;conomise 294&euro;/an</span>
-              )}
-            </p>
-          </div>
-
           {/* Avantages */}
           <div className="mb-8">
             <h3 className="font-display text-lg font-medium mb-5 flex items-center gap-2 text-ivory">
@@ -149,9 +150,9 @@ function CheckoutContent() {
                 { icon: Crown, text: 'Communaut\u00e9 priv\u00e9e de traders' },
                 { icon: CheckCircle, text: 'Analyses de march\u00e9 quotidiennes' },
                 { icon: CheckCircle, text: 'Journal de trading intelligent avec IA' },
-                { icon: CheckCircle, text: 'Lives hebdomadaires exclusifs' },
                 { icon: CheckCircle, text: 'Syst\u00e8me de gamification et r\u00e9compenses' },
-                { icon: CheckCircle, text: 'R\u00e9siliable \u00e0 tout moment' },
+                { icon: CheckCircle, text: 'Giveaways hebdomadaires exclusifs' },
+                { icon: CheckCircle, text: 'Garantie satisfait ou rembours\u00e9 7 jours' },
               ].map((item, index) => (
                 <li key={index} className="flex items-start gap-3 text-ivory-muted">
                   <item.icon className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
@@ -161,41 +162,71 @@ function CheckoutContent() {
             </ul>
           </div>
 
-          {/* Email + CTA */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ivory-dim" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); setError('') }}
-                  placeholder="Ton email"
-                  required
-                  className="w-full pl-12 pr-4 py-4 bg-black-elevated border border-black-border rounded-xl text-ivory placeholder:text-ivory-dim focus:border-accent focus:outline-none transition-colors"
-                />
-              </div>
-              {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
-            </div>
+          {/* Plan selector */}
+          <div className="space-y-3 mb-6">
+            {plans.map((plan) => (
+              <button
+                key={plan.id}
+                type="button"
+                onClick={() => setSelected(plan.id)}
+                className={`w-full p-4 rounded-xl border transition-all text-left relative ${
+                  selected === plan.id
+                    ? 'border-accent bg-accent/10 ring-2 ring-accent/30'
+                    : 'border-black-border hover:border-ivory-dim/30 bg-black-elevated'
+                }`}
+              >
+                {plan.badge && (
+                  <span className="absolute -top-2.5 right-4 px-2.5 py-0.5 rounded-full text-xs font-bold bg-accent text-black">
+                    {plan.badge}
+                  </span>
+                )}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        selected === plan.id ? 'border-accent' : 'border-ivory-dim/40'
+                      }`}
+                    >
+                      {selected === plan.id && <div className="w-2.5 h-2.5 rounded-full bg-accent" />}
+                    </div>
+                    <div>
+                      <span className="font-bold text-ivory">{plan.name}</span>
+                      {plan.savings && (
+                        <span className="ml-2 text-xs text-accent">{plan.savings}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-display text-2xl font-bold text-ivory">
+                      {plan.price}&euro;
+                    </span>
+                    <span className="text-ivory-muted text-sm">{plan.period}</span>
+                  </div>
+                </div>
+                <p className="text-ivory-dim text-xs mt-1 ml-8">{plan.subtitle}</p>
+              </button>
+            ))}
+          </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 bg-accent hover:bg-accent/90 disabled:opacity-50 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-lg"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Redirection...
-                </>
-              ) : (
-                plan === 'annual' ? 'Rejoindre \u2014 294\u20AC/an' : 'Rejoindre \u2014 49\u20AC/mois'
-              )}
-            </button>
-          </form>
+          {/* Checkout button */}
+          <button
+            type="button"
+            onClick={handleCheckout}
+            disabled={loading}
+            className="w-full py-4 bg-accent hover:bg-accent/90 disabled:opacity-60 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-lg"
+          >
+            {loading ? 'Chargement...' : 'Rejoindre maintenant'}
+          </button>
+
+          {selected === 'lifetime' && (
+            <p className="text-accent text-sm text-center mt-3 flex items-center justify-center gap-2">
+              <Star className="w-4 h-4" />
+              Acc&egrave;s &agrave; vie &mdash; plus jamais de paiement
+            </p>
+          )}
 
           <p className="text-ivory-dim text-xs text-center mt-4">
-            Paiement 100% s&eacute;curis&eacute; par carte bancaire
+            Paiement 100% s&eacute;curis&eacute; via Freemius
           </p>
         </div>
 
@@ -203,7 +234,7 @@ function CheckoutContent() {
         <div className="text-center mt-8 space-y-4">
           <div className="inline-flex items-center gap-2 text-ivory-dim text-sm">
             <Shield className="w-4 h-4 text-accent/50" />
-            <span>Paiement 100% s\u00e9curis\u00e9 &mdash; Donn\u00e9es prot\u00e9g\u00e9es</span>
+            <span>Paiement 100% s&eacute;curis&eacute; &mdash; Donn&eacute;es prot&eacute;g&eacute;es</span>
           </div>
           <p className="text-ivory-dim text-sm">
             D&eacute;j&agrave; membre ?{' '}
@@ -221,9 +252,5 @@ function CheckoutContent() {
 }
 
 export default function CheckoutPage() {
-  return (
-    <Suspense>
-      <CheckoutContent />
-    </Suspense>
-  )
+  return <CheckoutContent />
 }

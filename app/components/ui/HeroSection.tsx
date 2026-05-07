@@ -3,9 +3,10 @@
 import { useEffect, useRef, useMemo } from 'react'
 import Image from 'next/image'
 import gsap from 'gsap'
-import { Shield, Users, Star, ChevronDown, ArrowRight } from 'lucide-react'
+import { Shield, Users, Star, ArrowRight } from 'lucide-react'
 import RotatingText from '../effects/RotatingText'
 import MagneticButton from '../effects/MagneticButton'
+import CommunityPreview from './CommunityPreview'
 import { trackEvent, identifyLead } from '../../lib/posthog'
 import { trackCheckoutInitiated } from '../../lib/analytics'
 
@@ -13,12 +14,11 @@ const URLS = {
   premium: '/checkout',
 }
 
-/* ============ DOLLAR RAIN ============ */
 function DollarRain({ count = 25 }: { count?: number }) {
   const particles = useMemo(() => {
     return Array.from({ length: count }, (_, i) => ({
       id: i,
-      left: `${(i * 137.508) % 100}%`, // golden angle spread
+      left: `${(i * 137.508) % 100}%`,
       delay: `${(i * 0.7) % 12}s`,
       duration: `${8 + (i % 7) * 2}s`,
       size: 10 + (i % 4) * 3,
@@ -93,7 +93,7 @@ export default function HeroSection() {
   }, [])
 
   return (
-    <section className="relative min-h-[85svh] flex items-center justify-center overflow-hidden hero-mesh">
+    <section className="relative flex flex-col overflow-visible hero-mesh pb-12 sm:pb-16">
       {/* Subtle grid */}
       <div className="absolute inset-0 opacity-[0.03]" style={{
         backgroundImage: 'linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px)',
@@ -116,91 +116,87 @@ export default function HeroSection() {
         }} />
       </div>
 
-      {/* Dollar sign rain */}
+      {/* Dollar rain — hero only */}
       <DollarRain count={25} />
 
-      {/* Center radial glow */}
-      <div className="absolute inset-0 pointer-events-none z-[2]">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[500px] rounded-full bg-accent/[0.04] blur-[120px]" />
-      </div>
-
-      <div className="relative z-10 w-full max-w-5xl mx-auto px-5 sm:px-8 py-16 sm:py-20 text-center">
+      {/* ===== TEXT CONTENT — top portion ===== */}
+      <div className="relative z-20 w-full max-w-5xl mx-auto px-5 sm:px-8 pt-24 sm:pt-28 text-center flex-shrink-0">
         {/* Badge */}
-        <div ref={badgeRef} className="inline-flex items-center gap-2.5 glass px-4 py-2 mb-8">
+        <div ref={badgeRef} className="inline-flex items-center gap-2.5 glass px-4 py-2 mb-5 sm:mb-6">
           <div className="w-2 h-2 rounded-full bg-green-500" style={{ animation: 'pulse-dot 2s ease-in-out infinite' }} />
           <span className="text-xs sm:text-sm text-ivory-muted font-medium tracking-wide uppercase">
-            15+ Certified Funded Traders
+            150+ traders actifs sur la plateforme
           </span>
         </div>
 
         {/* Logo */}
-        <div ref={logoRef} className="mb-6 sm:mb-8">
+        <div ref={logoRef} className="mb-4 sm:mb-5">
           <Image
             src="/logo-hvc-gradient.png"
             alt="High Value Capital"
             width={280}
             height={96}
-            className="mx-auto w-36 sm:w-48 md:w-64 h-auto"
+            className="mx-auto w-32 sm:w-44 md:w-56 h-auto"
             priority
           />
         </div>
 
-        {/* Headline — always 2 lines max */}
-        <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-display-xl font-normal mb-6 leading-tight">
-          <span className="block">Tu galères à être</span>
+        {/* Headline */}
+        <h1 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-normal mb-4 leading-tight">
+          <span className="block">La plateforme pour devenir</span>
           <span className="block">
             <RotatingText
               prefix=""
               words={["rentable", "funded", "discipliné", "profitable"]}
-              className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-display-xl font-normal"
+              className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-normal"
               interval={3000}
             />
-            {' '}<span className="text-accent">en trading ?</span>
+            {' '}<span className="text-accent">en trading.</span>
           </span>
         </h1>
 
         {/* Subline */}
-        <p ref={subtitleRef} className="text-base sm:text-lg md:text-xl text-ivory-muted max-w-2xl mx-auto mb-10 leading-relaxed font-light">
-          La méthode qui a permis à <span className="text-ivory font-medium">15+ membres</span> de
-          devenir Funded Traders et générer <span className="text-ivory font-medium">85,000$+</span> de payouts.
+        <p ref={subtitleRef} className="text-sm sm:text-base md:text-lg text-ivory-muted max-w-xl mx-auto mb-6 leading-relaxed font-light">
+          Formation, communauté privée, journal de trading IA et outils d&apos;analyse.
+          Tout ce qu&apos;il faut pour passer <span className="text-ivory font-medium">funded</span> et rester <span className="text-ivory font-medium">profitable</span>.
         </p>
 
         {/* CTA */}
-        <div ref={ctaRef} className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+        <div ref={ctaRef} className="flex flex-col sm:flex-row gap-3 justify-center mb-5">
           <MagneticButton
             href={URLS.premium}
             variant="primary"
-            className="text-base"
+            className="text-sm sm:text-base"
             onClick={() => { trackEvent('cta_clicked', { location: 'hero' }); trackCheckoutInitiated() }}
           >
-            Rejoindre la Formation
+            Accéder à la plateforme
             <span className="text-blue-200/70 font-normal">— dès 24,50€/mois</span>
             <ArrowRight className="w-4 h-4" />
           </MagneticButton>
         </div>
 
         {/* Trust */}
-        <div ref={trustRef} className="flex flex-wrap justify-center gap-4 sm:gap-10 text-ivory-dim text-xs sm:text-sm">
+        <div ref={trustRef} className="flex flex-wrap justify-center gap-3 sm:gap-8 text-ivory-dim text-[11px] sm:text-xs">
           {[
-            { icon: Shield, text: 'Formation complete' },
+            { icon: Shield, text: 'Journal de trading IA' },
             { icon: Users, text: '150+ membres actifs' },
-            { icon: Star, text: 'Partenaires officiels' },
+            { icon: Star, text: 'Partenaires prop firms' },
           ].map((item, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <item.icon className="w-3.5 h-3.5 text-accent/70" />
+            <div key={i} className="flex items-center gap-1.5">
+              <item.icon className="w-3 h-3 text-accent/70" />
               <span>{item.text}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Scroll cue */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-ivory-ghost z-10">
-        <span className="text-[10px] uppercase tracking-[0.2em]">Scroll</span>
-        <ChevronDown className="w-4 h-4 animate-bounce" />
+      {/* ===== SCREENSHOT — flows naturally below text ===== */}
+      <div className="relative z-10 mt-6 sm:mt-8 px-4 sm:px-8 md:px-12 lg:px-20">
+        <div className="max-w-6xl mx-auto">
+          <CommunityPreview />
+        </div>
       </div>
 
-      <div className="absolute bottom-0 inset-x-0 accent-line z-10" />
     </section>
   )
 }

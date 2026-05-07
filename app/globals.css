@@ -338,6 +338,63 @@ input:focus {
 
 /* ===== REDUCED MOTION ===== */
 
+/* ===== COMMUNITY PREVIEW ===== */
+
+@property --cp-border-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.cp-animated-border {
+  background: conic-gradient(
+    from var(--cp-border-angle),
+    #2563EB, #6366f1, #60A5FA, #2563EB
+  );
+  animation: cp-border-rotate 6s linear infinite;
+}
+
+@keyframes cp-border-rotate {
+  to { --cp-border-angle: 360deg; }
+}
+
+@keyframes cp-glow-breathe {
+  0%, 100% { opacity: 0.06; transform: scale(1); }
+  50% { opacity: 0.12; transform: scale(1.06); }
+}
+
+@keyframes cp-float-1 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(0.5deg); }
+}
+
+@keyframes cp-float-2 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(-0.5deg); }
+}
+
+@keyframes cp-float-3 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(0.3deg); }
+}
+
+@keyframes cp-scanline {
+  0% { top: -2px; opacity: 0; }
+  5% { opacity: 0.7; }
+  90% { opacity: 0.7; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@keyframes community-float {
+  0%, 100% { transform: perspective(1000px) translateY(0px); }
+  50% { transform: perspective(1000px) translateY(-8px); }
+}
+
+@keyframes community-shine {
+  0%, 75% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

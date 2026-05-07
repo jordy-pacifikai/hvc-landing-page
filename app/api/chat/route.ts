@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY ?? ''
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? ''
+const GROQ_API_KEY = process.env.GROQ_API_KEY ?? ''
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? ''
 const BREVO_API_URL = 'https://api.brevo.com/v3/contacts'
 const BREVO_API_KEY = process.env.BREVO_API_KEY ?? ''
@@ -290,8 +293,8 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  if (!ANTHROPIC_API_KEY) {
-    console.error('[ChatAPI] ANTHROPIC_API_KEY not set')
+  if (!DEEPSEEK_API_KEY && !GEMINI_API_KEY && !GROQ_API_KEY && !ANTHROPIC_API_KEY) {
+    console.error('[ChatAPI] No LLM API key configured')
     return NextResponse.json({ success: true, response: FALLBACK_MESSAGE })
   }
 
@@ -336,53 +339,136 @@ export async function POST(req: NextRequest) {
 
   cleanupSessions()
 
-  // Call Anthropic API directly with Sonnet 4.6
-  try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 25_000)
+  // ─── LLM Fallback Chain: DeepSeek → Gemini → Groq → Anthropic ─────────────
+  const openaiMessages = [
+    { role: 'system' as const, content: SYSTEM_PROMPT },
+    ...history,
+  ]
 
-    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 500,
-        system: SYSTEM_PROMPT,
-        messages: history,
-      }),
-      signal: controller.signal,
-    })
+  // Try each provider in order
+  const providers = [
+    {
+      name: 'DeepSeek',
+      key: DEEPSEEK_API_KEY,
+      url: 'https://api.deepseek.com/chat/completions',
+      model: 'deepseek-chat',
+      format: 'openai',
+    },
+    {
+      name: 'Gemini',
+      key: GEMINI_API_KEY,
+      url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      model: 'gemini-2.5-flash',
+      format: 'gemini',
+    },
+    {
+      name: 'Groq',
+      key: GROQ_API_KEY,
+      url: 'https://api.groq.com/openai/v1/chat/completions',
+      model: 'llama-3.3-70b-versatile',
+      format: 'openai',
+    },
+    {
+      name: 'Anthropic',
+      key: ANTHROPIC_API_KEY,
+      url: 'https://api.anthropic.com/v1/messages',
+      model: 'claude-sonnet-4-20250514',
+      format: 'anthropic',
+    },
+  ]
 
-    clearTimeout(timeoutId)
+  for (const provider of providers) {
+    if (!provider.key) continue
 
-    if (!anthropicRes.ok) {
-      const errText = await anthropicRes.text()
-      console.error(`[ChatAPI] Anthropic returned ${anthropicRes.status}: ${errText}`)
-      return NextResponse.json({ success: true, response: FALLBACK_MESSAGE })
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 20_000)
+
+      let res: Response
+      if (provider.format === 'openai') {
+        res = await fetch(provider.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${provider.key}`,
+          },
+          body: JSON.stringify({
+            model: provider.model,
+            messages: openaiMessages,
+            max_tokens: 500,
+            temperature: 0.7,
+          }),
+          signal: controller.signal,
+        })
+      } else if (provider.format === 'gemini') {
+        const geminiContents = history.map((m) => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: m.content }],
+        }))
+        res = await fetch(provider.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: geminiContents,
+            generationConfig: { maxOutputTokens: 500, temperature: 0.7 },
+          }),
+          signal: controller.signal,
+        })
+      } else {
+        // Anthropic
+        res = await fetch(provider.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': provider.key,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: provider.model,
+            max_tokens: 500,
+            system: SYSTEM_PROMPT,
+            messages: history,
+          }),
+          signal: controller.signal,
+        })
+      }
+
+      clearTimeout(timeoutId)
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => 'unknown')
+        console.error(`[ChatAPI] ${provider.name} returned ${res.status}: ${errText.slice(0, 200)}`)
+        continue // try next provider
+      }
+
+      const data = await res.json()
+      let responseText: string | undefined
+
+      if (provider.format === 'openai') {
+        responseText = data?.choices?.[0]?.message?.content
+      } else if (provider.format === 'gemini') {
+        responseText = data?.candidates?.[0]?.content?.parts?.[0]?.text
+      } else {
+        responseText = data?.content?.[0]?.text
+      }
+
+      if (!responseText) {
+        console.error(`[ChatAPI] ${provider.name} returned empty response`)
+        continue
+      }
+
+      history.push({ role: 'assistant', content: responseText })
+      console.log(`[ChatAPI] Responded via ${provider.name}`)
+      return NextResponse.json({ success: true, response: responseText })
+    } catch (err) {
+      const isTimeout = err instanceof Error && (err.name === 'AbortError' || err.message.includes('abort'))
+      console.error(`[ChatAPI] ${provider.name} ${isTimeout ? 'timed out' : 'failed'}:`, isTimeout ? '' : err)
+      continue // try next provider
     }
-
-    const data = await anthropicRes.json()
-    const responseText =
-      data?.content?.[0]?.text ?? FALLBACK_MESSAGE
-
-    // Add assistant response to history
-    history.push({ role: 'assistant', content: responseText })
-
-    return NextResponse.json({ success: true, response: responseText })
-  } catch (err) {
-    const isTimeout =
-      err instanceof Error && (err.name === 'AbortError' || err.message.includes('abort'))
-
-    if (isTimeout) {
-      console.error('[ChatAPI] Anthropic request timed out')
-    } else {
-      console.error('[ChatAPI] Anthropic fetch error:', err)
-    }
-
-    return NextResponse.json({ success: true, response: FALLBACK_MESSAGE })
   }
+
+  // All providers failed
+  console.error('[ChatAPI] All LLM providers failed')
+  return NextResponse.json({ success: true, response: FALLBACK_MESSAGE })
 }

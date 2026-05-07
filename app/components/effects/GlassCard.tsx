@@ -12,7 +12,7 @@ interface GlassCardProps {
 export default function GlassCard({
   children,
   className = "",
-  tilt = false,
+  tilt = true,
   glowColor = "rgba(37, 99, 235, 0.07)",
 }: GlassCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);

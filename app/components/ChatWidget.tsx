@@ -20,6 +20,49 @@ interface LeadData {
   email: string
 }
 
+// ─── Animated Avatar ─────────────────────────────────────────────────────────
+
+function HvcAvatar({ size = 48 }: { size?: number }) {
+  const pad = 4
+  const imgSize = size - pad * 2
+  return (
+    <div style={{ width: size, height: size, position: 'relative', flexShrink: 0 }}>
+      {/* Animated gradient ring */}
+      <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', animation: 'hvc-ring-spin 8s linear infinite', zIndex: 0 }}>
+        <defs>
+          <linearGradient id="hvc-ring-g" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#2563EB" />
+            <stop offset="50%" stopColor="#6366f1" />
+            <stop offset="100%" stopColor="#60A5FA" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="46" fill="none" stroke="url(#hvc-ring-g)" strokeWidth="2.5" strokeDasharray="10 5" />
+      </svg>
+      {/* Animated video avatar */}
+      <video
+        src="/hvc-avatar.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+        width={imgSize}
+        height={imgSize}
+        poster="/hvc-avatar.png"
+        style={{
+          width: imgSize,
+          height: imgSize,
+          borderRadius: '50%',
+          objectFit: 'cover',
+          position: 'absolute',
+          top: pad,
+          left: pad,
+          zIndex: 1,
+        }}
+      />
+    </div>
+  )
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const WELCOME_MESSAGE: Message = {
@@ -52,21 +95,7 @@ function getOrCreateSessionId(): string {
 function TypingIndicator() {
   return (
     <div className="flex items-end gap-2 mb-3">
-      <div
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: '50%',
-          background: 'rgba(99,102,241,0.15)',
-          border: '1px solid rgba(99,102,241,0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
-        <span style={{ fontSize: 12 }}>H</span>
-      </div>
+      <HvcAvatar size={28} />
       <div
         style={{
           background: 'rgba(30,30,36,0.9)',
@@ -215,25 +244,7 @@ function Bubble({ message }: BubbleProps) {
         marginBottom: 10,
       }}
     >
-      {!isUser && (
-        <div
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: '50%',
-            background: 'rgba(99,102,241,0.15)',
-            border: '1px solid rgba(99,102,241,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            fontSize: 12,
-            color: '#f0f0f5',
-          }}
-        >
-          H
-        </div>
-      )}
+      {!isUser && <HvcAvatar size={28} />}
       <div
         style={{
           maxWidth: '78%',
@@ -427,6 +438,9 @@ export default function ChatWidget() {
           0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.5), 0 4px 24px rgba(99,102,241,0.3); }
           50% { box-shadow: 0 0 0 8px rgba(99,102,241,0), 0 4px 32px rgba(99,102,241,0.5); }
         }
+        @keyframes hvc-ring-spin {
+          to { transform: rotate(360deg); }
+        }
         @keyframes hvc-slide-up {
           from { opacity: 0; transform: translateY(16px) scale(0.97); }
           to { opacity: 1; transform: translateY(0) scale(1); }
@@ -444,8 +458,8 @@ export default function ChatWidget() {
           width: 58,
           height: 58,
           borderRadius: '50%',
-          background: 'rgba(99,102,241,0.9)',
-          border: '1px solid rgba(99,102,241,0.5)',
+          background: isOpen ? 'rgba(99,102,241,0.9)' : 'transparent',
+          border: isOpen ? '1px solid rgba(99,102,241,0.5)' : 'none',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -453,13 +467,14 @@ export default function ChatWidget() {
           zIndex: 9998,
           animation: isOpen ? 'none' : 'hvc-pulse-glow 2.4s ease-in-out infinite',
           transition: 'background 0.2s, transform 0.2s',
-          transform: isOpen ? 'rotate(90deg)' : 'none',
+          padding: 0,
+          overflow: 'visible',
         }}
       >
         {isOpen ? (
           <X size={22} color="#f0f0f5" />
         ) : (
-          <MessageCircle size={22} color="#f0f0f5" />
+          <HvcAvatar size={58} />
         )}
       </button>
 
@@ -493,30 +508,14 @@ export default function ChatWidget() {
             style={{
               padding: '14px 18px',
               borderBottom: '1px solid rgba(99,102,241,0.15)',
+              background: 'linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(99,102,241,0.04) 100%)',
               display: 'flex',
               alignItems: 'center',
               gap: 10,
               flexShrink: 0,
             }}
           >
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: '50%',
-                background: 'rgba(99,102,241,0.2)',
-                border: '1px solid rgba(99,102,241,0.4)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 14,
-                fontWeight: 700,
-                color: '#f0f0f5',
-                flexShrink: 0,
-              }}
-            >
-              H
-            </div>
+            <HvcAvatar size={38} />
             <div style={{ flex: 1 }}>
               <p
                 style={{
@@ -546,6 +545,7 @@ export default function ChatWidget() {
                     borderRadius: '50%',
                     background: '#4ade80',
                     display: 'inline-block',
+                    boxShadow: '0 0 6px rgba(74,222,128,0.4)',
                   }}
                 />
                 En ligne
@@ -555,17 +555,17 @@ export default function ChatWidget() {
               onClick={() => setIsOpen(false)}
               aria-label="Fermer le chat"
               style={{
-                background: 'none',
-                border: 'none',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.08)',
                 cursor: 'pointer',
                 color: '#8888a0',
                 display: 'flex',
-                padding: 4,
-                borderRadius: 6,
-                transition: 'color 0.15s',
+                padding: 5,
+                borderRadius: 8,
+                transition: 'color 0.15s, background 0.15s',
               }}
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           </div>
 
@@ -652,6 +652,33 @@ export default function ChatWidget() {
                 <Send size={16} color="#f0f0f5" />
               )}
             </button>
+          </div>
+
+          {/* Powered by PACIFIK'AI */}
+          <div
+            style={{
+              padding: '6px 0',
+              textAlign: 'center',
+              flexShrink: 0,
+              borderTop: '1px solid rgba(255,255,255,0.04)',
+            }}
+          >
+            <a
+              href="https://pacifikai.com?ref=hvc-chatbot"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: 10,
+                color: 'rgba(255,255,255,0.25)',
+                textDecoration: 'none',
+                letterSpacing: '0.03em',
+                transition: 'color 0.2s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(99,102,241,0.7)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.25)' }}
+            >
+              Powered by PACIFIK&apos;AI
+            </a>
           </div>
         </div>
       )}

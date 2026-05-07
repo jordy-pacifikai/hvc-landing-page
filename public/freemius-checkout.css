@@ -1,0 +1,12 @@
+/* Freemius Checkout — Hide branding badge */
+.fs-fulfillment-badge,
+.fs-fulfillment-badge__content,
+.fs-fulfillment-badge__logo,
+.fs-svg-logo {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}

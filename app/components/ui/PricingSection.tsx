@@ -25,7 +25,7 @@ export default function PricingSection() {
             </h2>
           </div>
 
-          <div className="max-w-3xl mx-auto grid sm:grid-cols-2 gap-5">
+          <div className="max-w-5xl mx-auto grid sm:grid-cols-3 gap-5">
             {/* Monthly */}
             <div className="reveal-child">
               <GlassCard className="p-6 sm:p-8 h-full">
@@ -97,6 +97,41 @@ export default function PricingSection() {
                   <p className="text-center text-xs text-ivory-ghost mt-4">
                     95% de nos Funded Traders ont choisi cette formation
                   </p>
+                </div>
+              </GlassCard>
+            </div>
+
+            {/* Lifetime */}
+            <div className="reveal-child">
+              <GlassCard className="p-6 sm:p-8 h-full relative">
+                <span className="absolute -top-3 right-4 bg-accent text-black text-[11px] font-bold px-3 py-1 rounded-full tracking-wide uppercase animate-float z-20">
+                  BEST DEAL
+                </span>
+                <div className="relative z-10">
+                  <h3 className="font-display text-xl mb-2 text-ivory">À vie</h3>
+                  <div className="flex items-baseline gap-1 mb-1">
+                    <span className="font-display text-4xl text-ivory">588€</span>
+                  </div>
+                  <p className="text-ivory-ghost text-sm mb-8">Paiement unique — accès permanent</p>
+
+                  <ul className="space-y-3 mb-8">
+                    {[...included, 'Accès à vie, plus jamais de paiement', 'Toutes les futures mises à jour incluses'].map((item, i) => (
+                      <li key={i} className="flex items-start gap-2.5">
+                        <CheckCircle className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
+                        <span className="text-ivory-muted text-sm">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <MagneticButton
+                    href="/checkout"
+                    variant="secondary"
+                    className="w-full"
+                    onClick={() => { trackEvent('cta_clicked', { location: 'pricing_lifetime' }); trackCheckoutInitiated() }}
+                  >
+                    Choisir à vie
+                    <ArrowRight className="w-4 h-4" />
+                  </MagneticButton>
                 </div>
               </GlassCard>
             </div>
