@@ -427,7 +427,13 @@ export async function POST(req: NextRequest) {
           body: JSON.stringify({
             model: provider.model,
             max_tokens: 500,
-            system: SYSTEM_PROMPT,
+            system: [
+              {
+                type: 'text',
+                text: SYSTEM_PROMPT,
+                cache_control: { type: 'ephemeral' },
+              },
+            ],
             messages: history,
           }),
           signal: controller.signal,
